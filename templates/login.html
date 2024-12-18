@@ -1,0 +1,104 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Radiusmail | Login</title>
+
+    {% load static %}
+    
+	<link href="{% static 'css/compiled.min.css' %}" rel="stylesheet">
+	<link href="{% static 'css/fontawesome.min.css' %}" rel="stylesheet">
+	<link href="{% static 'css/style.css' %}" rel="stylesheet">
+	<style type="text/css">
+		      body{
+				background: url(static/img/color-splash.jpg) no-repeat center center fixed;
+				-webkit-background-size: cover;
+				-moz-background-size: cover;
+				-o-background-size: cover;
+				background-size: cover;
+				}
+				.layer {
+				background-color: rgba(0, 0, 0, 0.2);
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.btn-link-2 {
+			  display: inline-block;
+			  height: 40px;
+			  margin: 5px;
+			  padding: 10px 20px 0 20px;
+			  background: rgba(0, 0, 0, 0.3);
+			  border: 1px solid #fff;
+			  font-size: 16px;
+				font-weight: 300;
+				line-height: 16px;
+				color: #fff;
+				-moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+			}
+			.btn-link-2:hover, .btn-link-2:focus, 
+			.btn-link-2:active, .btn-link-2:active:focus { outline: 0; opacity: 0.6; background: rgba(0, 0, 0, 0.3); color: #fff; }
+
+			.btn-link-2 i {
+			  padding-right: 5px;
+			  vertical-align: middle;
+			  font-size: 18px;
+			  line-height: 18px;
+			}
+			a, a:hover, a:focus {
+				-o-transition: all .3s; -moz-transition: all .3s; -webkit-transition: all .3s; -ms-transition: all .3s; transition: all .3s;
+			}
+
+			.btn-link-2 img{
+			  height: 20px;
+			  width: auto;
+			}
+			.margin-left{
+			  margin-left: 20px;
+			}
+	</style>
+</head>
+<body>
+<div class="layer">	
+    <div class="container">
+		<div class="row justify-content-center">
+            <div class="col-md-5">				
+              <form id="form-login" class="bg-white rounded shadow-5-strong p-5 mt-5" action="" autocomplete="off" method="post">{% csrf_token %}
+				<div class="text-center pb-4">
+					<img src="{% static 'img/logologin.png' %}" class="img-fluid" >
+				</div>
+                <div class="form-outline mb-4">
+				  <i class="fas fa-user trailing"></i>
+                  <input type="text" id="id_username" name="username" class="form-control" autofocus>
+                  <label class="form-label" for="username">Usuario</label>
+                </div>
+                <div class="form-outline mb-4">
+				  <i class="fas fa-lock trailing"></i>
+                  <input type="password" name="password" id="id_password" class="form-control" />
+                  <label class="form-label" for="password">Contraseña</label>
+                </div>
+                <button type="submit" id="btnLogin" class="btn btn-primary btn-block"><i class="fas fa-sign-in-alt"></i> Acceder</button>
+              </form>							  
+            </div>
+			<div class="col-md-12 mt-5">
+				<div class="link-login text-center">
+				  <a class="btn btn-link-2" href="https://www.infomed.hlg.sld.cu" rel="nofollow" target="_blank"><img src="{% static 'img/infomed.png' %}"/> Infomed</a>
+				  <a class="btn btn-link-2 margin-left" href="https://webmail.hlg.sld.cu" rel="nofollow" target="_blank"><i class="fa fa-envelope"></i>Webmail</a>
+				  <a class="btn btn-link-2 margin-left" href="https://soporte.hlg.sld.cu" rel="nofollow" target="_blank"><i class="fa fa-life-ring"></i>Soporte</a>
+				</div>
+			</div>
+          </div>
+    </div> <!-- /container -->
+
+<!-- JavaScript  -->
+		<script src="{% static 'js/jquery.min.js' %}"></script>		
+		<script src="{% static 'js/popper.min.js' %}"></script>
+		<script src="{% static 'js/mdb.min.js' %}"></script>
+		<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+		<script src="{% static 'js/login.js' %}"></script>
+</div>
+</body>
+</html>

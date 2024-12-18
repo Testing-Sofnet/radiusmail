@@ -1,0 +1,68 @@
+﻿{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+{% load static %}
+<div class="container-fluid">
+	<div class="page-header">
+		<div class="row">
+			<div class="col-md-12">
+				<h3><i class="fa fa-history me-2"></i> Logs del sistema</h3>
+			</div>			
+		</div>
+	</div>
+	
+	<div id="logslist"></div>
+	
+
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/react/babel.min.js"></script>
+<script src="/static/react/react.development.js"></script>
+<script src="/static/react/react-dom.development.js"></script>
+<script type="text/babel">
+    const Listlogs = ({listlogs = [], spinner, errormsg, count}) => {
+        const renderLogs = (
+            <>
+                {
+                <div className="table-responsive">
+                    <table id="listlog" className="table table-sm table-hover table-striped display nowrap">
+						<caption>{count} Registros</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">ID</th>
+							<th scope="col">Msg</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">IP</th>
+                            <th scope="col">Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {listlogs.map((item, index) => (
+                                <tr key={index}>
+                                    <td>{item.id}</td>
+									<td>{item.msg_type_display}</td>
+                                    <td>{item.users.username}</td>
+                                    <td>{item.access_date}</td>
+                                    <td>{item.ip}</td>                                    
+                                    <td>{item.comentario}</td>                                    
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>  
+                </div>                  
+                }
+            </>
+        )
+        return (
+            <>
+                {errormsg && <div className="alert alert-danger">{errormsg}</div>}
+                {spinner ? <Spinner /> : renderLogs}
+            </>
+        )
+    }
+</script>
+<script type="text/babel" src="/static/react/components/logslist.js"></script>
+{% endblock %}

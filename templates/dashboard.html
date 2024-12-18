@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block container %}
+<script src="/static/js/highcharts.src.js"></script>
+<script src="/static/js/data-highcharts.js"></script>
+<script src="/static/js/exporting-highcharts.js"></script>
+<script src="/static/js/offline-exporting-highcharts.js"></script>
+<div class="container-fluid"> 
+    <div class="row">
+        <div class="col-md-6">
+				<h4 id="report_logs" class="page-header-system">Reporte Logs</h4>
+                <div id="reporte-logs"></div>
+                <script>
+                    Highcharts.chart('reporte-logs', {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: ''
+                    },
+                    subtitle: {
+                        text: ''
+                    },
+                    credits: {
+                                        enabled: false
+                                    },
+                    xAxis: {
+                        categories: [
+                            {% for entry in report_type_logs %} '{{ entry.logs.msg_type }}' {% if not forloop.last %}, {% endif %} {% endfor %}
+                        ],
+                        crosshair: true
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Trazas'
+                        }
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                            '<td style="padding:0"><b>{point.y:1f}</b></td></tr>',
+                        footerFormat: '</table>',
+                        shared: true,
+                        useHTML: true
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0
+                        }
+                    },
+                    series: [{
+                        name: 'Trazas',
+                        data: [
+                            {% for date in report_type_logs %}{{ date.logs.msg_type__count }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        ],
+                    }]
+                });
+                </script>
+				
+        </div>
+        <div class="col-md-6">			
+				<h4 id="report_service" class="page-header-system">Estado Servicios</h4>
+                <div id="reporte-service"></div>
+                <script>
+                    Highcharts.chart('reporte-service', {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: ''
+                    },
+                    subtitle: {
+                        text: ''
+                    },
+                    credits: {
+                                        enabled: false
+                                    },
+                    xAxis: {
+                        categories: [
+                            {% for entry in report_type_service %} '{{ entry.services.sldservice__service_name }}' {% if not forloop.last %}, {% endif %} {% endfor %}
+                        ],
+                        crosshair: true
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: ''
+                        }
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                            '<td style="padding:0"><b>{point.y:1f}</b></td></tr>',
+                        footerFormat: '</table>',
+                        shared: true,
+                        useHTML: true
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0
+                        }
+                    },
+                    series: [{
+                        name: 'Usuarios',
+                        data: [
+                            {% for date in report_type_service %}{{ date.services.sldservice__count }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        ],
+                    }]
+                });
+                </script>
+				
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <h4 id="logs" class="page-header-system">Logs</h4>
+            <table class="table table-hover table-responsive table-sm">
+                <thead>
+                    <tr>
+                        <th>Msg</th>
+                        <th>Usuario</th>
+                        <th>Grupo</th>
+                        <th>Fecha</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for logs in report_log %}
+                <tr data-mdb-toggle="tooltip" data-mdb-placement="bottom" title="{{ logs.comentario }}">
+                    <td>{{ logs.get_msg_type_display }}</td>
+                    <td>{{ logs.users.username }}</td>
+                    <td>{{ logs.users.groups.all.0.name }}</td>
+                    <td>{{ logs.access_date|date:"d/m/Y" }}</td>
+                    <td>{{ logs.ip }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h4 id="mailhost" class="page-header-system">Últimos Usuarios</h4>
+            <table class="table table-hover table-responsive table-sm">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>CI</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for users in report_users %}
+                <tr data-toggle="tooltip" data-placement="bottom" title="{{ users.trabajo }} ({{ users.municipio }})">
+                    <td>{{ users.email }}</td>
+                    <td>{{ users.ci }}</td>
+                    <td>{{ users.create_date|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+		
+</div>
+</main>
+{% endblock %}
+{% block extra_js %}
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+{% endblock %}

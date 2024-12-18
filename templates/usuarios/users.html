@@ -1,0 +1,480 @@
+{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+{% load static %}
+<div class="container-fluid">
+	<div class="page-header">
+		<div class="row">
+            <div class="col-md-11">
+				<h3><i class="fa fa-users me-2"></i> Listado de usuarios</h3>
+			</div>
+			<div class="col-md-1">
+				{% if request.user|has_group:"Representantes" %}
+					{% if totaluser >= user_datos.user_profile.quota %}
+						<span class="pull-right mt-1"><a href="#" class="text-success swalDefaultError"><i class="fa fa-user-plus fa-2x" aria-hidden="true"></i></a></span>
+					{% else %}
+						<span class="pull-right mt-1"><a data-mdb-toggle="modal" data-mdb-target="#addUser" href="#" class="text-success"><i class="fa fa-user-plus fa-2x" aria-hidden="true"></i></a></span>
+					{% endif %}
+				{% else %}
+					<span class="pull-right mt-1"><a data-mdb-toggle="modal" data-mdb-target="#addUser" href="#" class="text-success"><i class="fa fa-user-plus fa-2x" aria-hidden="true"></i></a></span>
+				{% endif %}
+			</div>
+        </div>
+    </div>    
+    <div id="usuarioslist"></div>
+    
+    <div class="modal fade" id="addUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="exampleModalLabel">Crear Usuario</h5>
+			  <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+			  
+		  <form id="addUserForm" action="{% url 'usuarios:insert_user' %}" method="POST" role="form">{% csrf_token %}
+				  <div class="container-fluid">
+					  <div class="row">
+						  <div class="col-md-6">
+							  <div class="form-group">
+								  <label for="basic-url" class="form-label">Usuario</label>
+								  <div class="input-group mb-3">
+									<input type="text" name="email" class="form-control" id="id_email" style="height: calc(2.08rem + 3px)">
+									<span class="input-group-text">@hlg.sld.cu</span>
+								  </div>
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.nombre.label }}</label>
+								{{ userform.nombre }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.apellidos.label }}</label>
+								{{ userform.apellidos }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.ci.label }}</label>
+								{{ userform.ci }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.address.label }}</label>
+								{{ userform.address }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.telefono.label }}</label>
+								{{ userform.telefono }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.telefono_work.label }}</label>
+								{{ userform.telefono_work }}
+							  </div>
+							  <div class="form-group">
+								<label for="model">{{ userform.ocupacion.label }}</label>
+								{{ userform.ocupacion }}
+							  </div>
+							
+						  </div>
+						  <div class="col-md-6">						
+							{% if request.user|has_group:"Admin" %}
+								<div class="form-group">
+									<label for="model">{{ userform.municipio.label }}</label>
+									{{ userform.municipio }}
+								</div>
+								<div class="form-group">
+									<label for="model">{{ userform.trabajo.label }}</label>
+									<select name="trabajo" class="form-select select2" id="id_trabajo" name="trabajo" data-bv-field="trabajo"></select>						
+								</div>
+							{% endif %}
+							{% if request.user|has_group:"Representantes" %}
+							<div class="form-group">
+								<label for="model">{{ userform.municipio.label }}</label>
+								<select name="municipio" class="form-select" id="id_municipio">
+								  <option value="{{ user_profile.municipio.pk }}">{{ user_profile.municipio.municipio_name }}</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label for="model">{{ userform.trabajo.label }}</label>							
+								<select name="trabajo" class="form-select" id="id_trabajo">
+								  <option value="{{ user_profile.trabajo.pk }}">{{ user_profile.trabajo.trabajo_name }}</option>
+								</select>
+							</div>
+							{% endif %}							
+							<div class="form-group">
+								<label for="model">{{ userform.tipo_cuenta.label }}</label>
+								{{ userform.tipo_cuenta }}
+							</div>
+							<div class="form-group">
+								<label for="model">{{ userform.quota.label }}</label>
+								<input type="number" name="quota" class="form-control" placeholder="En MB" required id="id_quota" value="20" {% if request.user|has_group:"Representantes" %} readonly {% endif %}>
+							</div>							
+							<div class="form-group">
+								<label for="model">Servicios</label>
+								<div id="id_sldservice">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" name="sldservice" value="1" id="id_sldservice_0" checked/>
+										<label class="form-check-label" for="id_sldservice_0">Jabber</label>
+									</div>
+									{% if request.user|has_group:"Wifi" or request.user|has_group:"Admin" %}
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" name="sldservice" value="2" id="id_sldservice_1" />
+										<label class="form-check-label" for="id_sldservice_1">Wifi</label>
+									</div>
+									{% endif %}
+									{% if request.user|has_group:"Email" or request.user|has_group:"Admin" %}
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" name="sldservice" value="3" id="id_sldservice_2" />
+										<label class="form-check-label" for="id_sldservice_2">Correo</label>
+									</div>
+									{% endif %}
+								</div>
+							</div>
+							<div class="form-group">								
+								<label for="model">Contraseña</label>
+								<span id="passstrength"></span>
+								<div class="input-group mb-3">
+								  <input type="password" class="form-control" id="passwd" name="passwd"/>
+								  <span id="passstrength"></span>
+								  <span class="input-group-text">
+									<i class="fa fa-eye" id="togglePassword" 
+								  style="cursor: pointer"></i>
+								  </span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="model">Repetir contraseña</label>
+								<div class="input-group mb-3">              
+								  <input type="password" class="form-control" id="passwd1" name="passwd1"/>
+								  <span class="input-group-text">
+									<i class="fa fa-eye" id="togglePassword1" 
+								  style="cursor: pointer"></i>
+								  </span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="model">{{ userform.notas.label }}</label>
+								{{ userform.notas }}
+							</div>
+						  </div>					  					
+					  </div>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+					<button id="btnFetch" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+				  </div>
+				  <input type="hidden" name="uidNumber" id="id_uidNumber" value="{{ uidnumber }}">
+		  </form>
+				  
+			</div>
+			<!--
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+			  <button type="button" class="btn btn-primary" onclick="addWlan()"><i class="fa fa-check"></i> Guardar</button>
+			</div>
+			-->
+		  </div>
+		</div>
+	  </div>
+	
+	</div>
+	<!-- Modal -->
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script src="/static/react/babel.min.js"></script>
+<script src="/static/react/react.development.js"></script>
+<script src="/static/react/react-dom.development.js"></script>
+<script type="text/babel">
+    const Listusers = ({listusers = [], spinner, errormsg, count}) => {
+        const renderUsers = (
+            <>
+                {
+				<div className="table-responsive">
+                    <table id="listuser" className="table table-sm table-hover table-striped display nowrap">
+                        <caption>{count} Usuarios</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">#</th>
+							<th scope="col">Nombre y Apellidos</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">CI</th>
+                            <th scope="col">Ocupación</th>
+                            {% if request.user|has_group:"Admin"%}
+                            <th scope="col">Municipio</th>
+                            <th scope="col">Institución</th>
+                            {% endif %}
+                            <th scope="col">Cuota</th>
+                            <th scope="col">Servicios</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {listusers.map((item, index) => (
+                                <tr key={index}>
+									<td>{index + 1}</td>
+                                    <td><a href={"/users/edit/" + item.encodepk + "/"}>{item.nombre} {item.apellidos}</a></td>
+                                    <td>{item.email}</td>
+                                    <td>{item.ci}</td>
+                                    <td>{item.ocupacion.ocupacion_name}</td>
+                                    {% if request.user|has_group:"Admin"%}
+                                    <td>{item.municipio.municipio_name}</td>
+                                    <td>{item.trabajo.trabajo_name}</td>
+                                    {% endif %}
+                                    <td>{item.quota} Mb</td>
+                                    <td>
+                                        {item.sldservice.map((task, index) => {
+                                            if (task.service === "JabberdAccess") {
+                                                return <a key={index} href="#" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Jabber"><i className="fa fa-comment-dots"></i></a>;
+                                            } else if (task.service === "MailAccess") {
+                                                return <a key={index} className="ms-2" href="#" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Correo"><i className="fa fa-envelope"></i></a>;
+                                            } else if (task.service === "WlanAccess") {
+                                                return <a key={index} className="ms-2" href="#" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Wifi"><i className="fa fa-wifi"></i></a>;
+                                            }
+                                            return null;
+                                        })}
+                                        
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table> 
+				</div>                   
+                }
+            </>
+        )
+        return (
+            <>
+                {errormsg && <div className="alert alert-danger">{errormsg}</div>}
+                {spinner ? <Spinner /> : renderUsers}
+            </>
+        )
+    }
+</script>
+<script type="text/babel" src="/static/react/components/userlist.js"></script>
+<script>
+	$(function() {
+		var Toast = Swal.mixin({
+			toast: true,
+			position: 'top-end',
+			showConfirmButton: false,
+			timer: 3000
+		});
+		$('.swalDefaultError').click(function() {
+		  Toast.fire({
+			icon: 'error',
+			title: 'Ha excedido el límite de su cuota asignada.'
+		  })
+		});
+	});
+</script>
+<script>
+	$(document).ready(function() {
+			$('.select2').select2({
+			dropdownParent: $('#addUser')
+		});
+		$('.select2bs4').select2({
+		  theme: 'bootstrap4'
+		})
+	  });
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#addUserForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetch').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetch').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#addUser').modal('toggle');
+						$("form input[type=password]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetch').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#addUserForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetch').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				email: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						remote: {
+							url: '/users/check_user/',
+							message: 'Este usuario ya existe en el sistema'
+						},
+						regexp: {
+							regexp: /^[a-zA-Z0-9_]+$/,
+							message: 'El nombre de usuario solo puede contener letras, números y guión bajo'
+						}
+					}
+				},
+				nombre: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				apellidos: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				ci: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						numeric: {
+							message: 'Este campo solo acepta números'
+						},
+						stringLength: {
+							min:'11',
+							max:'11',
+							message: 'Este campo debe contener 11 dígitos'
+						}
+					}
+				},
+				address: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				quota: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						numeric: {
+							message: 'Este campo solo acepta números'
+						},
+					}
+				},
+				tipo_cuenta: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				trabajo: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				municipio: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				ocupacion: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				sldservice: {
+					validators: {
+						notEmpty: {
+							message: 'Debe seleccionar al menos un servicio'
+						}
+					}
+				},
+				passwd: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						identical: {
+							field: 'passwd1',
+							message: 'Las contraseñas no coenciden'
+						}
+					}
+				},
+				passwd1: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						identical: {
+							field: 'passwd',
+							message: 'Las contraseñas no coenciden'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+  </script>
+  <script>
+	const togglePassword = document.querySelector("#togglePassword");
+	const togglePassword1 = document.querySelector("#togglePassword1");
+	const passwd = document.querySelector("#passwd");
+	const passwd1 = document.querySelector("#passwd1");
+	
+	togglePassword.addEventListener("click", function () {
+	   
+	  // toggle the type attribute
+	  const type = passwd.getAttribute("type") === "password" ? "text" : "password";
+	  passwd.setAttribute("type", type);
+	  // toggle the eye icon
+	  this.classList.toggle('fa-eye');
+	  this.classList.toggle('fa-eye-slash');
+	}); 
+	togglePassword1.addEventListener("click", function () {
+	   
+	  // toggle the type attribute
+	  const type = passwd1.getAttribute("type") === "password" ? "text" : "password";
+	  passwd1.setAttribute("type", type);
+	  // toggle the eye icon
+	  this.classList.toggle('fa-eye');
+	  this.classList.toggle('fa-eye-slash');
+	});
+	</script>
+{% endblock %}

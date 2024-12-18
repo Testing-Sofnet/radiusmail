@@ -1,0 +1,120 @@
+{% load systemtags %}
+{% get_users_datos %}
+<!doctype html>
+<html lang="es" class="h-100">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Radiusmail | {{ title }}</title>
+
+    {% load static %}   
+	<link href="{% static 'css/compiled.min.css' %}" rel="stylesheet">
+	<link href="{% static 'css/fontawesome.min.css' %}" rel="stylesheet">
+	<link href="{% static 'css/bootstrapValidator.min.css' %}" rel="stylesheet">	
+	<link href="{% static 'css/dataTables.bootstrap5.min.css' %}" rel="stylesheet">	
+	<link href="{% static 'css/buttons.bootstrap5.min.css' %}" rel="stylesheet">
+    <link href="{% static 'plugins/select2/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}" rel="stylesheet">
+	<link href="{% static 'css/style.css' %}" rel="stylesheet">
+	<script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+	<script src="{% static 'js/gijgo.min.js' %}"></script>
+	<link href="{% static 'css/gijgo.min.css' %}" rel="stylesheet">	
+	
+	{% block extra_js %}{% endblock %}
+
+  </head>
+  <body class="d-flex flex-column h-100">
+<header>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-radiusmail mb-1">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'dashboard' %}"><img src="{% static 'img/logoin.png' %}" height="20" alt="Dashboard" loading="lazy"/></a>
+	<button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+	<div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <!-- Left links -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">        
+		<li class="nav-item"><a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
+		{% if request.user|has_group:"Admin"%}        
+		<li class="nav-item"><a class="nav-link {% if request.path == '/system/logs/' %}active{% endif %}" href="{% url 'system:list_logs' %}"><i class="fa fa-history"></i> Logs</a></li>
+		<li class="nav-item"><a class="nav-link {% if request.path == '/radius/list/' %}active{% endif %}" href="{% url 'radius:list_radius' %}"><i class="fa fa-phone"></i> Radius</a></li>		
+		{% endif %}		
+		{% if request.user|has_group:"Representantes" or  request.user|has_group:"Admin" %}
+		<li class="nav-item"><a class="nav-link {% if request.path == '/users/list/' %}active{% endif %}" href="{% url 'usuarios:user_list' %}"><i class="fa fa-users"></i> Usuarios</a></li>		
+		{% endif %}
+		{% if request.user|has_group:"Enlaces" or  request.user|has_group:"Admin" %}
+		<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-mdb-toggle="dropdown" aria-expanded="false"><i class="fa fa-network-wired"></i> Enlaces</a>
+          <!-- Dropdown menu -->
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'enlaces:list_adsl' %}"><i class="fa fa-network-wired"></i> ADSL</a></li>
+            <li><a class="dropdown-item" href="{% url 'enlaces:list_internet' %}"><i class="fa fa-globe-americas"></i> Internet</a></li>            
+          </ul>
+        </li>
+		{% endif %}
+      </ul>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+		<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-mdb-toggle="dropdown" aria-expanded="false"><i class="fa fa-user-alt"></i> {{user_datos.first_name}} {{user_datos.last_name}}</a>
+          <!-- Dropdown menu -->
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fa fa-address-card"></i> Perfil</a></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa fa-sign-out-alt"></i> Salir</a></li>            
+          </ul>
+        </li>
+    </ul>      
+    </div>
+  </div>
+</nav>
+</header>
+<main role="main" class="flex-shrink-0">
+	<div id="msg" class="alert alert-danger in hide">        
+        <div id="msg-body"></div>		
+    </div>
+{% block container %}{% endblock %}
+
+<footer class="footer mt-auto py-3">
+  <div class="container text-center text-md-left">
+			<div class="row d-flex align-items-center">
+					<div class="col-md-7 col-lg-8">
+						<p class="text-center text-md-left text-muted">© 2022 <a class="text-muted" href="https://soporte.hlg.sld.cu/">Nodo Provincial Infomed - Holguín</a></p>
+					</div>
+					<div class="col-md-5 col-lg-4 ml-lg-0">
+						<p class="text-center text-md-right text-muted">Radiusmail v2022.1</p>
+					</div>
+			</div>
+  </div>
+</footer>
+<!-- JavaScript  -->
+	<script src="{% static 'js/popper.min.js' %}"></script>
+	<script src="{% static 'js/mdb.min.js' %}"></script>
+	<script src="{% static 'js/bootstrapValidator.min.js' %}"></script>
+	<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables.bootstrap5.min.js' %}"></script>
+	<script src="{% static 'js/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/buttons.bootstrap5.min.js' %}"></script>
+	<script src="{% static 'js/jszip.min.js' %}"></script>
+	<script src="{% static 'js/pdfmake.min.js' %}"></script>
+	<script src="{% static 'js/vfs_fonts.js' %}"></script>
+	<script src="{% static 'js/buttons.html5.min.js' %}"></script>
+	<script src="{% static 'js/buttons.print.min.js' %}"></script>	
+    <script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+	<script src="{% static 'plugins/inputmask/jquery.inputmask.min.js' %}"></script>
+	<script src="{% static 'plugins/inputmask/bindings/inputmask.binding.js' %}"></script>
+	<script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+	{% if messages %}
+		{% for m in messages %}
+				<script>
+					Swal.fire({
+						"title": "Confirmación",
+						"text": "{{m}}",
+						"icon": "success",
+						"showConfirmButton": false,
+						timer: 3000,
+					})
+				</script>
+		{% endfor %}
+	{% endif %}
+	{% block extrajs %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,1423 @@
+{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+{% load static %}
+<div id="spinner"></div>
+
+    <section style="background-color: #eee;">
+        <div class="container py-5">                
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="card mb-4">
+                <div class="card-body text-center">
+                  <img src="{% static 'img/' %}{{ getuser.sexo }}.png" alt="avatar"
+                    class="rounded-circle img-fluid" style="width: 150px;">
+                  <h5 class="my-3">{{ getuser.nombre }} {{ getuser.apellidos }}</h5>
+                  <p class="text-muted mb-1">{{ getuser.ocupacion }}</p>
+                  <p class="text-muted mb-4">{{ getuser.trabajo }}</p>
+                  <div class="d-flex justify-content-center mb-4">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="customSwitch{{ getuser.pk }}" {% if getuser.active %}checked{% else %} {% endif %}/>
+                      <label class="form-check-label" for="customSwitch{{ getuser.pk }}"></label>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-center mb-4">
+                    <div class="btn-group" role="group">
+                      <button id="btnGroupDrop1" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-mdb-toggle="dropdown" aria-expanded="false">Editar</button>
+                      <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                        <li><a data-mdb-toggle="modal" data-mdb-target="#editDatosPersonales" class="dropdown-item" href="#">Datos personales</a></li>
+                        <li><a data-mdb-toggle="modal" data-mdb-target="#editPass" class="dropdown-item" href="#">Cambiar contraseña</a></li>
+                        <li><a data-mdb-toggle="modal" data-mdb-target="#editService" class="dropdown-item" href="#">Servicios</a></li>
+                        {% if request.user|has_group:"Admin" %}
+                        <li><a data-mdb-toggle="modal" data-mdb-target="#trasladar" class="dropdown-item" href="#">Trasladar</a></li>
+                        {% endif %}
+                      </ul>
+                    </div>                    
+                    <a id="user-{{ getuser.pk }}" data-user="{{ getuser.email }}" href="#" class="btn btn-outline-danger btn-sm ms-1" onClick="delete_user({{ getuser.pk }})">Borrar</a>                
+                  </div>
+                  <div class="d-flex justify-content-center mb-2">
+                    {% for service in service_list %}
+                        {% if service.service == 'MailAccess' %}<a href="#" class="ms-3" data-mdb-toggle="tooltip" data-mdb-placement="top" title="Servicio: {{ service.service_name }}"><i class="fa fa-envelope"></i></a>{% endif %}
+                        {% if service.service == 'WlanAccess' %}<a href="#" class="ms-3" data-mdb-toggle="tooltip" data-mdb-placement="top" title="Servicio: {{ service.service_name }}"><i class="fa fa-wifi"></i></a>{% endif %}
+                        {% if service.service == 'JabberdAccess' %}<a href="#" data-mdb-toggle="tooltip" data-mdb-placement="top" title="Servicio: {{ service.service_name }}"><i class="fa fa-comment-dots"></i></a>{% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="card mb-4 mb-lg-0">
+                <div class="card-body p-0">
+                  <ul class="list-group list-group-flush rounded-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                      Fecha de Creación:
+                      <p class="mb-0">{{ getuser.create_date }}</p>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                       Última Modificación:
+                      <p class="mb-0">{{ getuser.modify_date }}</p>
+                    </li>
+                    
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div class="card mb-4">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Nombre y Apellidos</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.nombre }} {{ getuser.apellidos }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Usuario</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.email }}@hlg.sld.cu</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Teléfono personal</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.telefono|default_if_none:"---" }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Teléfono del trabajo</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.telefono_work|default_if_none:"---" }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Dirección particular</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.address }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Municipio</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.municipio }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Institución</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.trabajo }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Ocupación</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.ocupacion }}</p>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Notas</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <p class="text-muted mb-0">{{ getuser.notas|default_if_none:"---" }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                {% for service in service_list %}
+                {% if service.service == 'MailAccess' %}
+                <div class="col-md-12">
+                  <div class="card mb-4">
+                    <div class="card-body">
+                      <p class="mb-4">
+                        <span class="text-primary font-italic me-1">servicio</span> Correo 
+                        <a class="text-warning ms-3" data-mdb-toggle="modal" data-mdb-target="#editMail" href="#"  role="button" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Editar"><i class="fa fa-pencil-alt"></i></a>
+                      </p>
+                      <p class="mb-1" style="font-size: .77rem;">Tipo de cuenta: {{ getuser.tipo_cuenta }}</p>
+                      
+                      <p class="mt-4 mb-1" style="font-size: .77rem;">Cuota: {{ getuser.quota }} Mb</p>                      
+                      
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                {% if service.service == 'WlanAccess' %}
+                <div class="col-md-12">
+                  <div class="card mb-4">
+                    <div class="card-body">
+                      <p class="mb-4">
+                        <span class="text-primary font-italic me-1">servicio</span> Wifi
+                        {% if request.user|has_group:"Representantes" %}
+                          {% if totalmac > 0 %}
+                            <a class="text-success ms-3 swalDefaultErrorMac"  href="#"  role="button" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Agregar dispositivo"><i class="fa fa-plus"></i></a>
+                          {% else %}
+                            <a class="text-success ms-3" data-mdb-toggle="modal" data-mdb-target="#addDevice" href="#"  role="button" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Agregar dispositivo"><i class="fa fa-plus"></i></a>
+                          {% endif %}
+                        {% else %}
+                          <a class="text-success ms-3" data-mdb-toggle="modal" data-mdb-target="#addDevice" href="#"  role="button" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Agregar dispositivo"><i class="fa fa-plus"></i></a>
+                        {% endif %}
+                      </p>
+                      <div class="list-group list-group-flush">
+                        {% for device in getuser.DeviceUsers.all %}
+                        <div class="list-group-item list-group-item-action" aria-current="true">
+                          <div class="d-flex w-100 justify-content-between">
+                            <p class="mb-1" style="font-size: .77rem;">Dispositivo: {% if device.type_device == '1' %}<i class="fa fa-laptop"></i> {% endif %}{% if device.type_device == '2' %}<i class="fa fa-tablet-alt"></i> {% endif %}{% if device.type_device == '3' %}<i class="fa fa-mobile-alt"></i> {% endif %}{{ device.get_type_device_display }}</p>
+                            <small>
+                              <a id="device-{{ device.pk }}" href="#" data-user="{{ getuser.email }}" data-mac="{{ device.mac_address }}" class="text-danger" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Eliminar" onclick="delMac({{ device.pk }})">
+                                <i class="far fa-trash-alt"></i>
+                              </a>
+                            </small>
+                          </div>
+                          <p class="mt-1 mb-1" style="font-size: .77rem;">Marca: {{ device.marca }}</p>                      
+                          <p class="mt-1 mb-1" style="font-size: .77rem;">Modelo: {{ device.model }}</p>                      
+                          <p class="mt-1 mb-1" style="font-size: .77rem;">MAC: {{ device.mac_address }}</p>                      
+                          <p class="mt-1 mb-1" style="font-size: .77rem;">OS: {% if device.os == '1' %}<i class="fab fa-windows"></i> {% endif %}{% if device.os == '2' %}<i class="fab fa-apple"></i> {% endif %}{% if device.os == '3' %}<i class="fab fa-android"></i> {% endif %}{% if device.os == '4' %}<i class="fab fa-linux"></i> {% endif %}{% if device.os == '5' %}<i class="fab fa-apple"></i> {% endif %}{{ device.get_os_display }}</p>
+                        </div>
+                        {% empty %}
+                        <li class="list-group-item" style="font-size: .77rem;">No tiene ningún dispositivo</li>
+                        {% endfor %}
+                      </div>                 
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="modal fade" id="editService" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Editar servicios</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              
+          <form id="serviceChangeForm" action="{% url 'usuarios:service_change' %}" method="POST" role="form">{% csrf_token %}
+            
+            <div class="form-group">
+              <label for="model">Servicios</label>
+              <div id="id_sldservice">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" name="sldservice" value="1" id="id_sldservice_0" {% for service in service_list %}{% if service.service == 'JabberdAccess' %}checked{% endif %}{% endfor %}/>
+                  <label class="form-check-label" for="id_sldservice_0">Jabber</label>
+                </div>
+                {% if request.user|has_group:"Wifi" or request.user|has_group:"Admin" %}
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" name="sldservice" value="2" id="id_sldservice_1" {% for service in service_list %}{% if service.service == 'WlanAccess' %}checked{% endif %}{% endfor %}/>
+                  <label class="form-check-label" for="id_sldservice_1">Wifi</label>
+                </div>
+                {% endif %}
+                {% if request.user|has_group:"Email" or request.user|has_group:"Admin" %}
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" name="sldservice" value="3" id="id_sldservice_2" {% for service in service_list %}{% if service.service == 'MailAccess' %}checked{% endif %}{% endfor %}/>
+                  <label class="form-check-label" for="id_sldservice_2">Correo</label>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+              
+            <input name="user" value="{{ getuser.pk }}" type="hidden"/>            
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button id="btnFetchService" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Cambiar</button> 
+            </div>
+          </form>
+                  
+            </div>
+            <!--
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button type="button" class="btn btn-primary" onclick="trasladarWlan()"><i class="fa fa-shipping-fast"></i> Trasladar</button>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="trasladar" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Trasladar usuario</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              
+          <form id="trasladarForm" action="{% url 'usuarios:traslado_usuario' %}" method="POST" role="form">{% csrf_token %}
+                  <div class="container-fluid">
+                      <div class="row">
+                          <div class="col-md-12">
+                              <div class="form-group">
+                                  <label for="model">{{ trasladarform.municipio.label }}</label>
+                                  <select class="form-select select2" id="id_municipio" name="municipio">
+                                      <option value="">-----</option>
+                                      {%for municipio in munic %}
+                                      <option value="{{ municipio.pk }}">{{ municipio.municipio_name }}</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="col-md-12">
+                              <div class="form-group">
+                                  <label for="model">{{ trasladarform.trabajo.label }}</label>
+                                  <select name="trabajo" class="form-select select2" id="id_trabajo" name="trabajo" data-bv-field="trabajo"></select>						
+                              </div>
+                          </div>
+                          <input name="user" value="{{ getuser.pk }}" type="hidden"/>
+                          <input name="origen" value="{{ getuser.trabajo.trabajo_name }} {{ getuser.municipio.municipio_name }}" type="hidden"/>
+                          <input name="email" value="{{ getuser.email }}" type="hidden"/>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>                  
+                    <button id="btnFetchTrasladar" type="submit" class="btn btn-primary" disabled><i class="fa fa-shipping-fast"></i> Trasladar</button> 
+                  </div>
+          </form>
+                  
+            </div>
+            <!--
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button type="button" class="btn btn-primary" onclick="trasladarWlan()"><i class="fa fa-shipping-fast"></i> Trasladar</button>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editPass" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Cambiar contraseña</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              
+          <form id="passwdChangeForm" action="{% url 'usuarios:user_change_passwd' %}" method="POST" role="form">{% csrf_token %}
+            <div class="form-group">
+                <label for="model">Contraseña nueva</label>
+                <span id="passstrength" style="top: 54px; left: 360px;"></span>
+                <div class="input-group mb-3">
+                  <input type="password" class="form-control" id="passwd" name="passwd"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword" 
+                  style="cursor: pointer"></i>
+                  </span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="model">Repetir contraseña</label>
+                <div class="input-group mb-3">              
+                  <input type="password" class="form-control" id="passwd1" name="passwd1"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword1" 
+                  style="cursor: pointer"></i>
+                  </span>
+                </div>
+            </div>
+            <input name="user" value="{{ getuser.pk }}" type="hidden"/>            
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button id="btnFetchPasswd" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Cambiar</button> 
+            </div>
+          </form>
+                  
+            </div>
+            <!--
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button type="button" class="btn btn-primary" onclick="trasladarWlan()"><i class="fa fa-shipping-fast"></i> Trasladar</button>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editMail" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Editar datos del correo</h5>
+            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            
+          <form id="editMailForm" action="{% url 'usuarios:email_change' %}" method="POST" role="form">{% csrf_token %}
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="model">{{ datosmailform.tipo_cuenta.label }}</label>
+                      {{ datosmailform.tipo_cuenta }}
+                    </div>                                                      
+                  </div>
+                  <div class="col-md-6">                    
+                    <div class="form-group">
+                      <label for="model">{{ datosmailform.quota.label }}</label>
+                      <input type="number" name="quota" class="form-control" placeholder="En MB" required id="id_quota" value="{{ getuser.quota }}" {% if request.user|has_group:"Representantes" %} readonly {% endif %}>
+                    </div>                                
+                  </div>					
+                </div>
+              </div>
+              <input name="email" value="{{ getuser.email }}" type="hidden"/>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchMail" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+              </div>
+
+          </form>
+              
+          </div>
+          <!--
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="addWlan()"><i class="fa fa-check"></i> Guardar</button>
+          </div>
+          -->
+          </div>
+        </div>
+        </div>
+      
+      </div>
+      
+      <div class="modal fade" id="editDatosPersonales" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Editar datos personales</h5>
+            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            
+          <form id="editUserForm" action="{% url 'usuarios:save_edit_user' %}" method="POST" role="form">{% csrf_token %}
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                    <label for="model">{{ datospersonalesform.nombre.label }}</label>
+                    {{ datospersonalesform.nombre }}
+                    </div>
+                    <div class="form-group">
+                    <label for="model">{{ datospersonalesform.apellidos.label }}</label>
+                    {{ datospersonalesform.apellidos }}
+                    </div>
+                    <div class="form-group">
+                    <label for="model">{{ datospersonalesform.ci.label }}</label>
+                    {{ datospersonalesform.ci }}
+                    </div>
+                    <div class="form-group">
+                    <label for="model">{{ datospersonalesform.address.label }}</label>
+                    {{ datospersonalesform.address }}
+                    </div>                                     
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="model">{{ datospersonalesform.telefono.label }}</label>
+                      {{ datospersonalesform.telefono }}
+                      </div>
+                      <div class="form-group">
+                      <label for="model">{{ datospersonalesform.telefono_work.label }}</label>
+                      {{ datospersonalesform.telefono_work }}
+                      </div> 				
+                    <div class="form-group">
+                      <label for="model">{{ datospersonalesform.ocupacion.label }}</label>
+                      {{ datospersonalesform.ocupacion }}
+                    </div>
+                    <div class="form-group">
+                      <label for="model">{{ datospersonalesform.notas.label }}</label>
+                      {{ datospersonalesform.notas }}
+                    </div>            
+                  </div>					
+                </div>
+              </div>
+              <input name="email" value="{{ getuser.email }}" type="hidden"/>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchDatos" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+              </div>
+
+          </form>
+              
+          </div>
+          <!--
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="addWlan()"><i class="fa fa-check"></i> Guardar</button>
+          </div>
+          -->
+          </div>
+        </div>
+        </div>      
+      </div>
+
+      <div class="modal fade" id="addDevice" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Agregar Dispositivo</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+          
+        <form id="addDeviceForm" action="{% url 'usuarios:insert_device' %}" method="POST" role="form">{% csrf_token %}
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="model">{{ deviceform.marca.label }}</label>
+                    {{ deviceform.marca }}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="model">{{ deviceform.model.label }}</label>
+                    {{ deviceform.model }}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="model">{{ deviceform.type_device.label }}</label>
+                    {{ deviceform.type_device }}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="model">{{ deviceform.os.label }}</label>
+                    {{ deviceform.os }}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="model">{{ deviceform.mac_address.label }}</label>
+                    <input type="text" name="mac_address" class="form-control" required id="id_mac_address" data-inputmask="'alias': 'mac'">
+                  </div>
+                </div>										
+                <input name="user" value="{{ getuser.pk }}" type="hidden"/>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button id="btnFetchDevice" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+        </form>
+            
+            </div>            
+          </div>
+        </div>
+      </div>
+
+</div>
+</main>
+
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script>
+  $(document).ready(function () {        
+		$('#serviceChangeForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchService').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchService').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#editService').modal('toggle');						
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2000);
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchService').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#serviceChangeForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+        .done(function(msg){  })
+        .fail(function(xhr, status, error) {
+                document.querySelector('#btnFetchService').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+                Swal.fire({
+                  icon: 'error',
+                  title: error,
+                  showConfirmButton: false,
+                  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+                })
+        });
+			},
+			fields: {
+				municipio: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				sldservice: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+  $(document).ready(function () {        
+		$('#trasladarForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchTrasladar').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchTrasladar').innerHTML = '<i class="fa fa-shipping-fast"></i> Trasladar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#trasladar').modal('toggle');
+						$("form input[type=select]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2000);
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchTrasladar').innerHTML = '<i class="fa fa-shipping-fast"></i> Trasladar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#trasladarForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+        .done(function(msg){  })
+        .fail(function(xhr, status, error) {
+                document.querySelector('#btnFetchTrasladar').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+                Swal.fire({
+                  icon: 'error',
+                  title: error,
+                  showConfirmButton: false,
+                  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+                })
+        });
+			},
+			fields: {
+				municipio: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				trabajo: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	function delete_user(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, eliminar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkred"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var user = $('#user-' + id).data('user');
+							var dataString = "user=" + user;
+              $('#spinner').html(`
+              <div class="preloader">
+                <div class="loader">
+                  <div class="spinner">
+                    <div class="spinner-container">
+                      <div class="spinner-rotator">
+                        <div class="spinner-left">
+                          <div class="spinner-circle"></div>
+                        </div>
+                        <div class="spinner-right">
+                          <div class="spinner-circle"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              `);
+							$.ajax
+							({
+								type: "POST",
+								url: "{% url 'usuarios:delete_user' %}",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+                    $('#spinner').empty()
+										window.location = "{% url 'usuarios:user_list' %}";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+                    $('#spinner').empty()
+										Swal.fire({
+										  icon: 'error',
+										  title: result.msg,
+										  showConfirmButton: false,
+										  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+										})
+									}
+								},
+								error: function (jqXHR, status, error) {
+                  $('#spinner').empty()
+									Swal.fire({
+									  icon: 'error',
+									  title: error,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									})
+								}
+							});
+						}
+					})
+	}
+</script>
+<script>
+  $(document).ready(function () {        
+      $('#passwdChangeForm').bootstrapValidator({
+          message: 'Este valor no es valido',
+          feedbackIcons: {
+              valid: '',
+              invalid: '',
+              validating: ''
+          },
+          submitHandler: function (validator, form, submitButton) {
+              document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+              $.post(form.attr('action'), form.serialize(), function (result) {
+                  if (result.status == false || result.status == 'false') {
+                      var Toast = Swal.mixin({
+                          toast: true,
+                          orientation: 'auto',
+                          showConfirmButton: false,
+                          timer: 4000
+                      });
+                      document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+                      Toast.fire({
+                          icon: 'error',
+                          title: result.msg
+                      });
+                  } else if (result.status == true || result.status == 'true') {
+                      $('#editPass').modal('toggle');
+                      $("form input[type=password]").each(function() { this.value = '' });
+                      var Toast = Swal.mixin({
+                          toast: true,
+                          orientation: 'auto',
+                          showConfirmButton: false,
+                          timer: 4000
+                      });
+                      document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+                      Toast.fire({
+                          icon: 'success',
+                          title: result.msg
+                      });
+
+                  } else {
+                      $('#passwdChangeForm').bootstrapValidator('disableSubmitButtons', false);
+                  }
+              }, 'json')
+              .done(function(msg){  })
+              .fail(function(xhr, status, error) {
+                document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+                Swal.fire({
+                  icon: 'error',
+                  title: error,
+                  showConfirmButton: false,
+                  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+                })
+              });
+          },
+          fields: {
+              passwd: {
+                  validators: {
+                      notEmpty: {
+                          message: 'Este campo no puede estar vacio'
+                      },
+                      identical: {
+                          field: 'passwd1',
+                          message: 'Las contraseñas no coenciden'
+                      }
+                  }
+              },
+              passwd1: {
+                  validators: {
+                      notEmpty: {
+                          message: 'Este campo no puede estar vacio'
+                      },
+                      identical: {
+                          field: 'passwd',
+                          message: 'Las contraseñas no coenciden'
+                      }
+                  }
+              }
+          }
+      })
+          .on('success.field.fv', function (e, data) {
+              if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+                  data.fv.disableSubmitButtons(true);
+              }
+          });
+  });
+</script>
+<script>
+const togglePassword = document.querySelector("#togglePassword");
+const togglePassword1 = document.querySelector("#togglePassword1");
+const passwd = document.querySelector("#passwd");
+const passwd1 = document.querySelector("#passwd1");
+
+togglePassword.addEventListener("click", function () {
+   
+  // toggle the type attribute
+  const type = passwd.getAttribute("type") === "password" ? "text" : "password";
+  passwd.setAttribute("type", type);
+  // toggle the eye icon
+  this.classList.toggle('fa-eye');
+  this.classList.toggle('fa-eye-slash');
+}); 
+togglePassword1.addEventListener("click", function () {
+   
+  // toggle the type attribute
+  const type = passwd1.getAttribute("type") === "password" ? "text" : "password";
+  passwd1.setAttribute("type", type);
+  // toggle the eye icon
+  this.classList.toggle('fa-eye');
+  this.classList.toggle('fa-eye-slash');
+});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editMailForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchMail').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchMail').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#editMail').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2000);
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchMail').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#editMailForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+        .done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchMail').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+			},
+			fields: {
+				tipo_cuenta: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},					
+				quota: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editUserForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchDatos').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchDatos').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#editDatosPersonales').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2000);
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchDatos').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#editUserForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+        .done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchDatos').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+			},
+			fields: {				
+				nombre: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				apellidos: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				ci: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						numeric: {
+							message: 'Este campo solo acepta números'
+						},
+						stringLength: {
+							min:'11',
+							max:'11',
+							message: 'Este campo debe contener 11 dígitos'
+						}
+					}
+				},
+				address: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},	
+				
+				ocupacion: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+  </script>
+  <script>
+    $(document).ready(function () {        
+      $('#addDeviceForm').bootstrapValidator({
+        message: 'Este valor no es valido',
+        feedbackIcons: {
+          valid: 'fa fa-check',
+          invalid: 'fa fa-times',
+          validating: 'fas fa-spinner fa-pulse'
+        },
+        submitHandler: function (validator, form, submitButton) {
+          document.querySelector('#btnFetchDevice').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+          $.post(form.attr('action'), form.serialize(), function (result) {
+            if (result.status == false || result.status == 'false') {
+              var Toast = Swal.mixin({
+                toast: true,
+                orientation: 'auto',
+                showConfirmButton: false,
+                timer: 4000
+              });
+              document.querySelector('#btnFetchDevice').innerHTML = '<i class="fa fa-check"></i> Guardar';
+              Toast.fire({
+                icon: 'error',
+                title: result.msg
+              });
+            } else if (result.status == true || result.status == 'true') {
+              $('#addDevice').modal('toggle');
+              $("form input[type=text]").each(function() { this.value = '' });
+              window.setTimeout(function() {
+                window.location = '';
+              }, 1000);
+              var Toast = Swal.mixin({
+                toast: true,
+                orientation: 'auto',
+                showConfirmButton: false,
+                timer: 4000
+              });
+              document.querySelector('#btnFetchDevice').innerHTML = '<i class="fa fa-check"></i> Guardar';
+              Toast.fire({
+                icon: 'success',
+                title: result.msg
+              });
+    
+            } else {
+              $('#addDeviceForm').bootstrapValidator('disableSubmitButtons', false);
+            }
+          }, 'json')
+          .done(function(msg){  })
+          .fail(function(xhr, status, error) {
+            document.querySelector('#btnFetchDevice').innerHTML = '<i class="fa fa-check"></i> Guardar';
+            Swal.fire({
+              icon: 'error',
+              title: error,
+              showConfirmButton: false,
+              footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+            })
+          });
+        },
+        fields: {				
+          model: {
+            validators: {
+              notEmpty: {
+                message: 'Este campo no puede estar vacio'
+              }
+            }
+          },
+          marca: {
+            validators: {
+              notEmpty: {
+                message: 'Este campo no puede estar vacio'
+              }
+            }
+          },
+          type_device: {
+            validators: {
+              notEmpty: {
+                message: 'Este campo no puede estar vacio'
+              }
+            }
+          },
+          mac_address: {
+            validators: {
+              notEmpty: {
+                message: 'Este campo no puede estar vacio'
+              },
+              remote: {
+                url: '/users/wlan_check_mac/',
+                message: 'Ya existe un dispositivo con la misma MAC en el sistema'
+              },
+              regexp: {
+                regexp: /^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})$/,
+                message: 'Esto no es una MAC válida. El formato es: 00-00-00-00-00-00'
+              }
+            }
+          },
+          os: {
+            validators: {
+              notEmpty: {
+                message: 'Este campo no puede estar vacio'
+              }
+            }
+          }
+        }
+      })
+        .on('success.field.fv', function (e, data) {
+          if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+            data.fv.disableSubmitButtons(true);
+          }
+        });
+    });
+  </script>
+  <script>
+    $("#customSwitch{{ getuser.pk }}").change(function(){
+      $('#spinner').html(`
+      <div class="preloader">
+        <div class="loader">
+          <div class="spinner">
+            <div class="spinner-container">
+              <div class="spinner-rotator">
+                <div class="spinner-left">
+                  <div class="spinner-circle"></div>
+                </div>
+                <div class="spinner-right">
+                  <div class="spinner-circle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      `);
+      if($(this).prop("checked") == true){                    
+        
+        let dataString = {
+          id: "{{ getuser.pk }}",
+          estado: "True",
+          estado_ldap: "On",
+          email: "{{ getuser.email }}",
+        };
+        $.ajax
+        ({
+          type: "POST",
+          url: "{% url 'usuarios:update_estado_usuario' %}",
+          data: dataString,
+          success: function(msg)
+
+          {
+            if (msg == 1)
+            {
+              $('#spinner').empty();
+              var Toast = Swal.mixin({
+                    toast: true,
+                    orientation: 'auto',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Usuario activado correctamente'
+                });
+            }
+            else{
+              $('#spinner').empty();
+              var Toast = Swal.mixin({
+                    toast: true,
+                    orientation: 'auto',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Error al procesar los datos'
+                });
+            }
+          }
+        });
+
+      }else{
+        
+        let dataString = {
+          id: "{{ getuser.pk }}",
+          estado: "False",
+          estado_ldap: "Off",
+          email: "{{ getuser.email }}",
+        };
+        $.ajax
+        ({
+          type: "POST",
+          url: "{% url 'usuarios:update_estado_usuario' %}",
+          data: dataString,
+          success: function(msg)
+          {
+            if (msg == 1)
+            {
+              $('#spinner').empty();
+              var Toast = Swal.mixin({
+                    toast: true,
+                    orientation: 'auto',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Usuario desactivado correctamente'
+                });
+            }
+            else{
+              $('#spinner').empty();
+              var Toast = Swal.mixin({
+                    toast: true,
+                    orientation: 'auto',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Error al procesar los datos'
+                });
+            }
+          },
+          error: function (jqXHR, status, error) {
+            $('#spinner').empty();     
+            Swal.fire({
+              icon: 'error',
+              title: error,
+              showConfirmButton: false,
+              footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+            })
+            }
+        });
+
+      }
+  });
+  </script>
+  <script>
+    function delMac(id) {
+            Swal.fire({
+              "title": "¿Estas seguro?",
+              "text": "Esta acción es irreversible",
+              "icon": "warning",
+              "showCancelButton":true,
+              "cancelButtonText": "No, cancelar",
+              "confirmButtonText": "Si, eliminar",
+              "reverseButtons":true,
+              "confirmButtonColor": "darkred"
+            })
+            .then(function(result) {
+              if(result.isConfirmed){
+                var macAddress = $('#device-' + id).data('mac');
+                var user = $('#device-' + id).data('user');
+                var dataString = "mac=" + macAddress + "&user=" + user;
+                $('#spinner').html(`
+                <div class="preloader">
+                  <div class="loader">
+                    <div class="spinner">
+                      <div class="spinner-container">
+                        <div class="spinner-rotator">
+                          <div class="spinner-left">
+                            <div class="spinner-circle"></div>
+                          </div>
+                          <div class="spinner-right">
+                            <div class="spinner-circle"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                `);
+                $.ajax
+                ({
+                  type: "POST",
+                  url: "{% url 'usuarios:delete_mac' %}",
+                  data: dataString,
+                  dataType: "json",
+                  success: function(result)
+                  {
+                    if (result.status == true || result.status == 'true')
+                    {
+                      $('#spinner').empty()
+                      window.setTimeout(function() {
+                        window.location = '';
+                      }, 2000);
+                      var Toast = Swal.mixin({
+                        toast: true,
+                        orientation: 'auto',
+                        showConfirmButton: false,
+                        timer: 4000
+                      });                      
+                      Toast.fire({
+                        icon: 'success',
+                        title: result.msg
+                      });
+                    }
+                    if (result.status == false || result.status == 'false')
+                    {
+                      $('#spinner').empty()
+                      Swal.fire({
+                        icon: 'error',
+                        title: result.msg,
+                        showConfirmButton: false,
+                        footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+                      })
+                    }
+                  },
+                  error: function (jqXHR, status, error) {
+                    $('#spinner').empty()
+                    Swal.fire({
+                      icon: 'error',
+                      title: error,
+                      showConfirmButton: false,
+                      footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+                    })
+                  }
+                });
+              }
+            })
+    }
+</script>
+<script>
+  $(function() {
+      var Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+      });
+    $('.swalDefaultErrorMac').click(function() {
+        Toast.fire({
+          icon: 'error',
+          title: 'Ha excedido el límite de dispositivo asignado para este usuario.'
+        })
+      });
+  });
+  </script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            dropdownParent: $('#trasladar')
+        });
+        $('.select2bs4').select2({
+          theme: 'bootstrap4'
+        })
+      });
+    </script>
+{% endblock %}

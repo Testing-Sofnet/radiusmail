@@ -1,0 +1,1091 @@
+{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+<div class="container-fluid">
+    <div class="page-header">
+		<div class="row">
+			<div class="col-md-12 d-flex flex-wrap justify-content-center">
+				<h3 class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto"> {{ getenlace }}</h3>
+				<div class="dropdown">
+				  <button
+					class="btn btn-primary dropdown-toggle"
+					type="button"
+					id="dropdownMenuButton"
+					data-mdb-toggle="dropdown"
+					aria-expanded="false"
+				  >
+					<i class="far fa fa-pencil-alt me-2"></i> Editar
+				  </button>
+				  <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+					{% if request.user|has_group:"Admin" %}
+						<li><a data-mdb-toggle="modal" data-mdb-target="#trasladar" class="dropdown-item" href="#">Trasladar</a></li>
+						<li><a data-mdb-toggle="modal" data-mdb-target="#cambioip" class="dropdown-item" href="#">Cambio de Bloque IP LAN</a></li>
+						{% if getenlace.InternetAdsl %}
+							<li><a data-mdb-toggle="modal" data-mdb-target="#cambioipinternet" class="dropdown-item" href="#">Cambio de IP de Internet</a></li>
+							<li><a data-mdb-toggle="modal" data-mdb-target="#actualizarpermiso" class="dropdown-item" href="#">Actualizar Permiso de Internet</a></li>
+						{% else %}
+							{% if getenlace.iplan %}
+								<li><a data-mdb-toggle="modal" data-mdb-target="#asignarinternet" class="dropdown-item" href="#">Asignar servicio de Internet</a></li>
+							{% else %}
+								<li><a class="dropdown-item swalDefaultErrorLAN" href="#">Asignar servicio de Internet</a></li>
+							{% endif %}
+						{% endif %}
+						<li><a id="enlace-{{ getenlace.pk }}" href="#" class="dropdown-item" onClick="delete_enlace({{ getenlace.pk }})">Borrar Enlace</a></li>
+						{% if getenlace.enrutamiento == 0 %}
+							<li><a id="enlace-{{ getenlace.pk }}" href="#" class="dropdown-item" onClick="route_enlace({{ getenlace.pk }})">Enrutar Enlace</a></li>
+						{% endif %}
+						<li><a data-mdb-toggle="modal" data-mdb-target="#cambioab" class="dropdown-item" href="#">Cambio de Ancho de Banda</a></li>
+						<li><a data-mdb-toggle="modal" data-mdb-target="#cambiotec" class="dropdown-item" href="#">Cambio de tecnología</a></li>
+					{% endif %}
+					
+				  </ul>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">Institución:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.trabajo }}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">IP WAN:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.ipwan }}{{ getenlace.ipwan_netmask }}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">IP LAN:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.iplan }}{{ getenlace.iplan_netmask }}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">ED:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.ed }}</p></div>
+                    </div>                    
+                </div>
+
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">AB:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.ab }} {{ getenlace.um_ab }}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">Tecnología:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{{ getenlace.get_tipo_conexion_display }}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">Internet:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{% if getenlace.InternetAdsl %} <i class="fa fa-check text-success"></i> ({{ getenlace.InternetAdsl.ip }}) {% else %} <i class="fa fa-times text-danger"></i>{% endif %}</p></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3"><p class="mb-0">Enrutado:</p></div>
+                        <div class="col-md-9"><p class="text-muted mb-0">{% if getenlace.enrutamiento == True %}<i class="fa fa-check text-success"></i>{% else %}<i class="fa fa-times text-danger"></i>{% endif %}</p></div>
+                    </div>
+                </div>
+                    
+            </div>
+        </div>
+    </div>
+	<div class="page-header-device"><h4>Historial</h4></div>
+			<table class="table table-hover table-sm table-responsive-sm">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Msg</th>
+                  <th>Fecha</th>
+                  <th>Comentario</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for logs in reportlog %}
+                <tr>
+                    <td>{{ logs.pk }}</td>
+					<td>{{ logs.get_msg_type_display }}</td>
+					<td>{{ logs.access_date }}</td>
+					<td>{{ logs.comentario }}</td>
+                </tr>
+				{% empty %}
+				<tr>
+				  <td colspan="4">Este enlace no tiene historial</td>
+				</tr>
+              {% endfor %}
+              </tbody>
+            </table>
+
+	<!-- Modal -->
+	<div class="modal fade" id="actualizarpermiso" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-scrollable" role="document">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="exampleModalLabel">Actualizar permiso</h5>
+			  <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+			  
+		  <form id="updateInternetForm" action="{% url 'enlaces:actualizar_permiso' %}" method="POST" role="form">{% csrf_token %}
+				  <div class="container-fluid">
+					  <div class="row">
+						  <div class="col-md-12">
+							<div class="form-group">
+								<label for="model">{{ updateinternetform.fecha_autorizo.label }}</label>													  
+								<input type="text" name="fecha_autorizo" class="form-control" id="id_fecha_autorizo" data-inputmask="'alias': 'datetime'" data-inputmask-inputformat="dd/mm/yyyy">
+							</div>
+						  </div>						  
+						  	<input name="internet" value="{{ getenlace.InternetAdsl.pk }}" type="hidden"/>							
+							<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+					  </div>
+				  </div>
+				  <div class="modal-footer">
+					  <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+					  <button id="btnFetchPermisoActualizado" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+				  </div>
+		  </form>
+				  
+			</div>      
+		  </div>
+		</div>
+	  </div>
+    
+	<!-- Modal -->
+<div class="modal fade" id="cambioip" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar Bloque IP LAN</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editIpLanForm" action="{% url 'enlaces:cambio_ip_lan' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-8">
+						<div class="form-group">
+							<label for="model">{{ cambioipform.iplan.label }}</label>
+							<input type="text" name="iplan" class="form-control" id="id_iplan" data-inputmask="'alias': 'ip'">
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label for="model">{{ cambioipform.iplan_netmask.label }}</label>
+							{{ cambioipform.iplan_netmask }}
+						</div>
+					</div>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+					<input name="origen-ip" value="{{ getenlace.iplan|default_if_none:'NAT' }}{{ getenlace.iplan_netmask|default_if_none:'' }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchCambioIPLan" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+<div class="modal fade" id="cambioipinternet" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar IP de Internet</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editIpInternetForm" action="{% url 'enlaces:cambio_ip_internet' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ cambioipinternetform.ip.label }}</label>
+							<input type="text" name="ip" class="form-control" id="id_ip" data-inputmask="'alias': 'ip'">
+						</div>
+					</div>
+					<input name="internet" value="{{ getenlace.InternetAdsl.pk }}" type="hidden"/>
+					<input name="origen-ip-internet" value="{{ getenlace.InternetAdsl.ip }}" type="hidden"/>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchCambioInternetAdsl" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+<div class="modal fade" id="asignarinternet" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Asignar Internet al Enlace</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="asignarInternetForm" action="{% url 'enlaces:asignar_internet' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ asignarinternetform.fecha_autorizo.label }}</label>
+							<input type="text" name="fecha_autorizo" class="form-control" id="id_fecha_autorizo" data-inputmask="'alias': 'datetime'" data-inputmask-inputformat="dd/mm/yyyy">
+						</div>
+						<div class="form-group">
+							<label for="model">{{ asignarinternetform.cuota.label }}</label>
+							{{ asignarinternetform.cuota }}
+						</div>
+						<div class="form-group">
+							<label for="model">{{ asignarinternetform.ip.label }}</label>
+							<input type="text" name="ip" class="form-control" id="id_ip" data-inputmask="'alias': 'ip'">
+						</div>
+					</div>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchAsignarInternetAdsl" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+<div class="modal fade" id="cambioab" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar Ancho de Banda</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editAbForm" action="{% url 'enlaces:cambio_ab' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-8">
+						<div class="form-group">
+							<label for="model">{{ cambioabform.ab.label }}</label>
+							{{ cambioabform.ab }}
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label for="model">{{ cambioabform.um_ab.label }}</label>
+							{{ cambioabform.um_ab }}
+						</div>
+					</div>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+					<input name="origen-ab" value="{{ getenlace.ab }} {{ getenlace.um_ab }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchChangeAB" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="trasladar" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Trasladar enlace</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="trasladarenlaceForm" action="{% url 'enlaces:traslado_enlace' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ trasladarform.municipio.label }}</label>
+							<select class="form-select select2" id="id_municipio" name="municipio">
+								<option value="">-----</option>
+								{%for municipio in munic %}
+								<option value="{{ municipio.pk }}">{{ municipio.municipio_name }}</option>
+								{% endfor %}
+							</select>
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ trasladarform.trabajo.label }}</label>
+							<select name="trabajo" class="form-select select2" id="id_trabajo" name="trabajo" data-bv-field="trabajo"></select>						
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ trasladarform.alias.label }}</label>
+							{{ trasladarform.alias }}	
+						</div>
+					</div>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+					<input name="origen" value="{{ getenlace.trabajo.trabajo_name }} {{ getenlace.municipio.municipio_name }}" type="hidden"/>
+					<input name="alias-origen" value="{{ getenlace.alias }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchTrasladoAdsl" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+<div class="modal fade" id="cambiotec" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar tecnologia</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editTecForm" action="{% url 'enlaces:cambio_tec' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ cambiotecform.tipo_conexion.label }}</label>
+							{{ cambiotecform.tipo_conexion }}
+						</div>
+					</div>
+					<input name="enlace" value="{{ getenlace.pk }}" type="hidden"/>
+					<input name="origen-tec" value="{{ getenlace.get_tipo_conexion_display }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+                <button id="btnFetchCambioTec" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Guardar</button> 
+            </div>
+	</form>
+			
+      </div>      
+    </div>
+  </div>
+</div>
+		
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script>
+	$(document).ready(function () {        
+		$('#updateInternetForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchPermisoActualizado').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchPermisoActualizado').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#actualizarpermiso').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchPermisoActualizado').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#updateInternetForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchPermisoActualizado').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {				
+				fecha_autorizo: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#trasladarenlaceForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchTrasladoAdsl').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchTrasladoAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#trasladar').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchTrasladoAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#trasladarenlaceForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchTrasladoAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				trabajo: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				municipio: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				alias: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editIpLanForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchCambioIPLan').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchCambioIPLan').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#cambioip').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchCambioIPLan').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#editIpLanForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchCambioIPLan').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				iplan: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						ip: {
+							message: 'Este campo solo acepta direcciones ipv4'
+						},
+						remote: {
+							url: '/adsl/check_iplan/',
+							message: 'Este ip ya tiene internet'
+						}
+					}
+				},
+				iplan_netmask: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#asignarInternetForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchAsignarInternetAdsl').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchAsignarInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#asignarinternet').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchAsignarInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#asignarInternetForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchAsignarInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				ip: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						ip: {
+							message: 'Este campo solo acepta direcciones ipv4'
+						},
+						remote: {
+							url: '/adsl/check_ipinternet/',
+							message: 'Este ip ya tiene internet'
+						}
+					}
+				},
+				fecha_autorizo: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				cuota: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						numeric: {
+							message: 'Este campo solo acepta numeros'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editIpInternetForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchCambioInternetAdsl').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchCambioInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#cambioipinternet').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchCambioInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#editIpInternetForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchCambioInternetAdsl').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				ip: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						ip: {
+							message: 'Este campo solo acepta direcciones ipv4'
+						},
+						remote: {
+							url: '/adsl/check_ipinternet/',
+							message: 'Este ip ya tiene internet'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editAbForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchChangeAB').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchChangeAB').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#cambioab').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchChangeAB').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#editAbForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchChangeAB').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				ab: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				um_ab: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#editTecForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchCambioTec').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchCambioTec').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#cambiotec').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2);
+						document.querySelector('#btnFetchCambioTec').innerHTML = '<i class="fa fa-check"></i> Guardar';						
+  
+					} else {
+						$('#editTecForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchCambioTec').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+				
+			},
+			fields: {
+				tipo_conexion: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+</script>
+<script>
+$(function() {
+    var Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 4000
+    });
+	$('.swalDefaultErrorLAN').click(function() {
+      Toast.fire({
+        icon: 'error',
+        title: 'No puede asignar el servicio de internet para este enlace porque no tiene IP LAN'
+      })
+    });
+});
+</script>
+<script>
+$(document).ready(function() {
+	$('.select2').select2({
+        dropdownParent: $('#trasladar')
+    });
+    $('.select2bs4').select2({
+      theme: 'bootstrap4'
+    })
+  });
+</script>
+<script>
+	function delete_enlace(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, eliminar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkred"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var dataString = "id="+id
+							$('#spinner').html(`
+							<div class="preloader">
+								<div class="loader">
+								<div class="spinner">
+									<div class="spinner-container">
+									<div class="spinner-rotator">
+										<div class="spinner-left">
+										<div class="spinner-circle"></div>
+										</div>
+										<div class="spinner-right">
+										<div class="spinner-circle"></div>
+										</div>
+									</div>
+									</div>
+								</div>
+								</div>
+							</div>
+							`);
+							$.ajax
+							({
+								type: "POST",
+								url: "{% url 'enlaces:delete_enlaces' %}",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+										$('#spinner').empty()
+										window.location = "{% url 'enlaces:list_adsl' %}";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+										$('#spinner').empty()
+										Swal.fire({
+										  icon: 'error',
+										  title: result.msg,
+										  showConfirmButton: false,
+										  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+										})
+									}
+								},
+								error: function (jqXHR, status, error) {
+									$('#spinner').empty()								
+									Swal.fire({
+									  icon: 'error',
+									  title: error,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									})
+								}
+							});
+						}
+					})
+	}
+</script>
+<script>
+	function route_enlace(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, enrutar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkblue"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var dataString = "id="+id
+							$('#spinner').html(`
+							<div class="preloader">
+								<div class="loader">
+								<div class="spinner">
+									<div class="spinner-container">
+									<div class="spinner-rotator">
+										<div class="spinner-left">
+										<div class="spinner-circle"></div>
+										</div>
+										<div class="spinner-right">
+										<div class="spinner-circle"></div>
+										</div>
+									</div>
+									</div>
+								</div>
+								</div>
+							</div>
+							`);
+							$.ajax
+							({
+								type: "POST",
+								url: "{% url 'enlaces:route_enlace' %}",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+										$('#spinner').empty()
+										window.location = "";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+										$('#spinner').empty()
+										Swal.fire({
+										  icon: 'error',
+										  title: result.msg,
+										  showConfirmButton: false,
+										  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+										})
+									}
+								},
+								error: function (jqXHR, status, error) {
+									$('#spinner').empty()									
+									Swal.fire({
+									  icon: 'error',
+									  title: error,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									})
+								}
+							});
+						}
+					})
+	}
+</script>
+{% endblock %}

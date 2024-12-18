@@ -1,0 +1,615 @@
+﻿{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+<div class="container-fluid">
+    <div class="page-header">
+		<div class="row">
+			<div class="col-md-12 d-flex flex-wrap justify-content-center">
+				<h3 class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto"> {{ getuser.nombre }} {{ getuser.apellidos }}</h3>
+				<a data-mdb-toggle="modal" data-mdb-target="#editWlan" class="btn btn-light btn-sm" href="#" role="button"><i class="far fa fa-pencil-alt me-2"></i> Editar</a>
+				<a data-mdb-toggle="modal" data-mdb-target="#editPass" class="btn btn-primary ms-2 btn-sm" href="#" role="button"><i class="fa fa-key me-2"></i> Cambiar Contraseña</a>								
+				{% if request.user|has_group:"Representantes" %}
+					{% if totalmac > 0 %}
+					<a class="btn btn-success ms-2 btn-sm swalDefaultErrorMac" href="#" role="button"><i class="fa fa-plus-square me-2"></i> Agregar Dispositivo</a>
+					{% else %}
+					<a data-mdb-toggle="modal" data-mdb-target="#addDevice" class="btn btn-success ms-2 btn-sm" href="#" role="button"><i class="fa fa-plus-square me-2"></i> Agregar Dispositivo</a>
+					{% endif %}
+				{% else %}
+					<a data-mdb-toggle="modal" data-mdb-target="#addDevice" class="btn btn-success ms-2 btn-sm" href="#" role="button"><i class="fa fa-plus-square me-2"></i> Agregar Dispositivo</a>
+				{% endif %}
+				{% if request.user|has_group:"Admin" %}
+					<a data-mdb-toggle="modal" data-mdb-target="#trasladar" class="btn btn-info ms-2 btn-sm" href="#" role="button"><i class="fa fa-shipping-fast me-2"></i> Trasladar</a>
+				{% endif %}
+				<a id="user-{{ getuser.pk }}" data-user="{{ getuser.email }}" href="#" class="btn btn-danger ms-2 btn-sm" onClick="delete_users_wlan({{ getuser.pk }}, false)"><i class="far fa-trash-alt me-2"></i> Borrar Usuario</a>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<h4 class="page-header">Datos Personales</h4>
+			<p><strong>Usuario:</strong> {{ getuser.nombre }} {{ getuser.apellidos }}</p>
+		</div>
+		<div class="col-md-6"></div>
+	</div>
+	<table class="table table-striped table-responsive-sm">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+				<th>Fecha de Creación</th>
+				<th>Ultima Modificación</th>
+				<th>Institución</th>
+				<th>Ocupación</th>
+            </tr>
+        </thead>
+        <tbody>
+             <tr>
+                <td>{{ getuser.email }}</td>
+                <td>{{ getuser.create_date }}</td>
+                <td>{{ getuser.modify_date }}</td>
+                <td>{{ getuser.trabajo }} ({{ getuser.trabajo.municipio }})</td>
+                <td>{{ getuser.get_type_ocupacion_display }}</td>
+             </tr>
+        </tbody>
+    </table>
+	<div class="page-header-device"><h3>Dispositivo</h3></div>
+			<table class="table table-hover table-sm table-responsive-sm">
+              <thead>
+                <tr>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Tipo</th>
+                  <th>Mac</th>
+                  <th>Os</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for device in getuser.DeviceUsers.all %}
+                <tr id="tr-{{ device.pk }}">
+                    <td>{{ device.marca }}</td>
+                    <td>{{ device.model }}</td>
+                    <td>{% if device.type_device == '1' %}<i class="fa fa-laptop"></i> {% endif %}{% if device.type_device == '2' %}<i class="fa fa-tablet-alt"></i> {% endif %}{% if device.type_device == '3' %}<i class="fa fa-mobile-alt"></i> {% endif %}{{ device.get_type_device_display }}</td>
+                    <td>{{ device.mac_address }}</td>
+                    <td>{% if device.os == '1' %}<i class="fab fa-windows"></i> {% endif %}{% if device.os == '2' %}<i class="fab fa-apple"></i> {% endif %}{% if device.os == '3' %}<i class="fab fa-android"></i> {% endif %}{% if device.os == '4' %}<i class="fab fa-linux"></i> {% endif %}{% if device.os == '5' %}<i class="fab fa-apple"></i> {% endif %}{{ device.get_os_display }}</td>
+                    <td>
+                        <a id="device-{{ device.pk }}" href="#" data-user="{{ getuser.email }}" data-mac="{{ device.mac_address }}" class="text-danger" data-mdb-toggle="tooltip" data-mdb-placement="left" title="Eliminar" onclick="delMac({{ device.pk }})">
+                            <i class="far fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+				{% empty %}
+				<tr>
+				  <td colspan="6">Este usuario no tiene dispositivos</td>
+				</tr>
+              {% endfor %}
+              </tbody>
+            </table>
+    
+	<!-- Modal -->
+<div class="modal fade" id="editWlan" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Editar Usuario</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editWlanForm" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.name.label }}</label>
+							{{ userform.name }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.ci.label }}</label>
+							{{ userform.ci }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.type_ocupacion.label }}</label>
+							{{ userform.type_ocupacion }}
+						</div>
+					</div>
+					<input name="email" value="{{ getuser.email }}" type="hidden"/>
+					<input name="pk" value="{{ getuser.pk }}" type="hidden"/>
+				</div>
+			</div>
+	</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="editUserWlan()"><i class="fa fa-check"></i> Actualizar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+<div class="modal fade" id="editPass" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar contraseña</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="passwdForm" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">Contraseña</label>
+							<input type="password" class="form-control" name="passwd" id="passwd"/>
+						</div>
+						<div class="form-group">
+							<label for="model">Repetir contraseña</label>
+							<input type="password" class="form-control" name="passwd1" id="passwd1"/>
+						</div>
+					</div>
+					<input name="user" value="{{ getuser.pk }}" type="hidden"/>
+				</div>
+			</div>
+	</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="changePasswdWlan()"><i class="fa fa-check"></i> Actualizar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addDevice" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Agregar Dispositivo</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="addDeviceForm" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ deviceform.marca.label }}</label>
+							{{ deviceform.marca }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ deviceform.model.label }}</label>
+							{{ deviceform.model }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ deviceform.type_device.label }}</label>
+							{{ deviceform.type_device }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ deviceform.os.label }}</label>
+							{{ deviceform.os }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ deviceform.mac_address.label }}</label>
+							<input type="text" name="mac_address" class="form-control" required id="id_mac_address" data-inputmask="'alias': 'mac'">
+						</div>
+					</div>										
+					<input name="user" value="{{ getuser.pk }}" type="hidden"/>
+				</div>
+			</div>
+	</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="addDevice()"><i class="fa fa-check"></i> Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="trasladar" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Trasladar usuario</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="trasladarForm" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ trasladarform.municipio.label }}</label>
+							<select class="form-select select2" id="id_municipio" name="municipio">
+								<option value="">-----</option>
+								{%for municipio in munic %}
+								<option value="{{ municipio.pk }}">{{ municipio.municipio_name }}</option>
+								{% endfor %}
+							</select>
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.trabajo.label }}</label>
+							<select name="trabajo" class="form-select select2" id="id_trabajo" name="trabajo" data-bv-field="trabajo"></select>						
+						</div>
+					</div>
+					<input name="user" value="{{ getuser.pk }}" type="hidden"/>
+					<input name="origen" value="{{ getuser.trabajo.trabajo_name }} {{ getuser.municipio.municipio_name }}" type="hidden"/>
+					<input name="email" value="{{ getuser.email }}" type="hidden"/>
+				</div>
+			</div>
+	</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="trasladarWlan()"><i class="fa fa-shipping-fast"></i> Trasladar</button>
+      </div>
+    </div>
+  </div>
+</div>
+		
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script>
+$(function() {
+    var Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 4000
+    });
+	$('.swalDefaultErrorMac').click(function() {
+      Toast.fire({
+        icon: 'error',
+        title: 'Ha excedido el límite de dispositivo asignado para este usuario.'
+      })
+    });
+});
+</script>
+<script>
+$(document).ready(function() {
+$('#editWlanForm').bootstrapValidator({
+        message: 'Este valor no es valido',
+        feedbackIcons: {
+            valid: 'fa fa-check',
+            invalid: 'fa fa-times',
+            validating: 'fas fa-spinner fa-pulse'
+        },
+        fields: {
+            name: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            },
+			ci: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    },
+					numeric: {
+                        message: 'Este campo solo acepta numeros'
+                    },
+					stringLength: {
+						min:'11',
+						max:'11',
+                        message: 'Este campo debe contener 11 digitos'
+                    }
+                }
+            },
+			type_ocupacion: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            }			
+        }
+    });
+
+    $('#addDeviceForm').bootstrapValidator({
+        message: 'Este valor no es valido',
+        feedbackIcons: {
+            valid: 'fa fa-check',
+            invalid: 'fa fa-times',
+            validating: 'fas fa-spinner fa-pulse'
+        },
+        fields: {
+            model: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            },
+			marca: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            },
+			type_device: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            },
+			mac_address: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    },
+					remote: {
+                        url: '/wlan/wlan_check_mac/',
+                        message: 'Ya existe un dispositivo con la misma MAC en el sistema'
+                    },
+					regexp: {
+                        regexp: /^([0-9A-Fa-f]{2}[-]){5}([0-9A-Fa-f]{2})$/,
+                        message: 'Esto no es una MAC válida. El formato es: 00-00-00-00-00-00'
+                    }
+                }
+            },
+			os: {
+                validators: {
+                    notEmpty: {
+                        message: 'Este campo no puede estar vacio'
+                    }
+                }
+            }
+        }
+    });
+
+});
+function editUserWlan(redirect) {
+
+    if ($('#editWlanForm').data('bootstrapValidator').isValid()) {
+
+        var dataString = $('#editWlanForm').serialize();
+
+        $.ajax({
+
+            url: "/wlan/save/",
+            type: "POST",
+            data: dataString,
+            dataType: "json",
+            success: function (result) {
+                if (result.status == true || result.status == 'true') {
+					
+					if (redirect == false) {
+                    $('#msg-body').html(result.msg);
+                    $('#msg').addClass('in');
+                    $('#msg').removeClass('hide');
+
+                    $('#addUserModal').modal('toggle');
+                    $('#addUserModal').on('hidden.bs.modal', function (e) {
+                        $(this).find('input[type="text"],input[type="email"],textarea,select').val('');
+                    })
+					}
+					else {
+						window.location = '';
+					}
+
+                    //window.location = "/ldapmanager/index.php/system/departamentos.html"
+                }
+                if (result.status == false || result.status == 'false') {
+                    Swal.fire({
+						icon: 'error',
+						title: result.msg,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+					})
+
+                }
+            },
+            error: function (jqXHR, status, error) {
+                Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+				})
+            }
+        });
+    }
+    else {
+        $('#editWlanForm').data('bootstrapValidator').validate();
+    }
+};
+
+function addDevice(redirect) {
+
+    if ($('#addDeviceForm').data('bootstrapValidator').isValid()) {
+
+        var dataString = $('#addDeviceForm').serialize();
+
+        $.ajax({
+
+            url: "/wlan/add_mac/",
+            type: "POST",
+            data: dataString,
+            dataType: "json",
+            success: function (result) {
+                if (result.status == true || result.status == 'true') {
+					
+					if (redirect == false) {
+                    $('#msg-body').html(result.msg);
+                    $('#msg').addClass('in');
+                    $('#msg').removeClass('hide');
+
+                    $('#addUserModal').modal('toggle');
+                    $('#addUserModal').on('hidden.bs.modal', function (e) {
+                        $(this).find('input[type="text"],input[type="email"],textarea,select').val('');
+                    })
+					}
+					else {
+						window.location = '';
+					}
+
+                    //window.location = "/ldapmanager/index.php/system/departamentos.html"
+                }
+                if (result.status == false || result.status == 'false') {
+                    Swal.fire({
+						icon: 'error',
+						title: result.msg,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+					})
+
+                }
+            },
+            error: function (jqXHR, status, error) {
+                Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+				})
+            }
+        });
+    }
+    else {
+        $('#addDeviceForm').data('bootstrapValidator').validate();
+    }
+};
+</script>
+<script>
+	function delMac(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, eliminar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkred"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var macAddress = $('#device-' + id).data('mac');
+							var user = $('#device-' + id).data('user');
+							var dataString = "mac=" + macAddress + "&user=" + user;
+							$.ajax
+							({
+								type: "POST",
+								url: "",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+										window.location = "";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+									Swal.fire({
+									  icon: 'error',
+									  title: result.msg,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+									})
+									}
+								},
+								error: function (jqXHR, status, error) {
+									Swal.fire({
+									  icon: 'error',
+									  title: error,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									})
+								}
+							});
+						}
+					})
+	}
+</script>
+<script>
+	function delete_users_wlan(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, eliminar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkred"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var user = $('#user-' + id).data('user');
+							var dataString = "user=" + user;
+							$.ajax
+							({
+								type: "POST",
+								url: "",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+										window.location = "";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+										Swal.fire({
+										  icon: 'error',
+										  title: result.msg,
+										  showConfirmButton: false,
+										  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+										})
+									}
+								},
+								error: function (jqXHR, status, error) {
+									Swal.fire({
+									  icon: 'error',
+									  title: error,
+									  showConfirmButton: false,
+									  footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									})
+								}
+							});
+						}
+					})
+	}
+</script>
+<script>
+$(document).ready(function() {
+	$('.select2').select2({
+        dropdownParent: $('#trasladar')
+    });
+    $('.select2bs4').select2({
+      theme: 'bootstrap4'
+    })
+  });
+</script>
+{% endblock %}

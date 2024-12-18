@@ -1,0 +1,409 @@
+﻿{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+<div id="spinner"></div>
+<div class="container-fluid">
+    <div class="page-header">
+		<div class="row">
+			<div class="col-md-12 d-flex flex-wrap justify-content-center">
+				<h3 class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto"> {{ getuser }}</h3>
+				<a data-mdb-toggle="modal" data-mdb-target="#editRadius" class="btn btn-light btn-sm" href="#" role="button"><i class="far fa fa-pencil-alt me-2"></i> Editar</a>
+				<a data-mdb-toggle="modal" data-mdb-target="#editPass" class="btn btn-primary ms-2 btn-sm" href="#" role="button"><i class="fa fa-key me-2"></i> Cambiar Contraseña</a>								
+				<a id="user-{{ getuser.pk }}" data-user="{{ getuser.email }}" href="#" class="btn btn-danger ms-2 btn-sm" onClick="delete_users_radius({{ getuser.pk }}, false)"><i class="far fa-trash-alt me-2"></i> Borrar Usuario</a>
+			</div>
+		</div>
+	</div>
+	<table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+				<th>Descripcion</th>
+                <th>Grupo</th>
+				<th>Fecha de Creación</th>
+				<th>Ultima Modificación</th>
+            </tr>
+        </thead>
+        <tbody>
+             <tr>
+                <td>{{ getuser.email }}</td>
+                <td>{{ getuser.description }}</td>
+                <td>{{ getuser.group }}</td>
+                <td>{{ getuser.create_date }}</td>
+                <td>{{ getuser.modify_date }}</td>
+             </tr>
+        </tbody>
+    </table>
+    
+	<!-- Modal -->
+<div class="modal fade" id="editRadius" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Editar Usuario</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		
+	<form id="editRadiusForm" action="{% url 'radius:radius_save_edit_user' %}" method="POST" role="form">{% csrf_token %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.name.label }}</label>
+							{{ userform.name }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.description.label }}</label>
+							{{ userform.description }}
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<label for="model">{{ userform.group.label }}</label>
+							{{ userform.group }}
+						</div>
+					</div>
+					<input name="email" value="{{ getuser.email }}" type="hidden"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+				<button id="btnFetchEditRadius" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Cambiar</button> 
+			</div>
+	</form>
+			
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="editPass" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Cambiar contraseña</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              
+          <form id="passwdChangeForm" action="{% url 'radius:radius_change_passwd' %}" method="POST" role="form">{% csrf_token %}
+            <div class="form-group">
+                <label for="model">Contraseña nueva</label>
+                <span id="passstrength" style="top: 54px; left: 360px;"></span>
+                <div class="input-group mb-3">
+                  <input type="password" class="form-control" id="passwd" name="passwd"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword" 
+                  style="cursor: pointer"></i>
+                  </span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="model">Repetir contraseña</label>
+                <div class="input-group mb-3">              
+                  <input type="password" class="form-control" id="passwd1" name="passwd1"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword1" 
+                  style="cursor: pointer"></i>
+                  </span>
+                </div>
+            </div>
+            <input name="user" value="{{ getuser.pk }}" type="hidden"/>            
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button id="btnFetchPasswd" type="submit" class="btn btn-primary" disabled><i class="fa fa-check"></i> Cambiar</button> 
+            </div>
+          </form>
+                  
+            </div>
+            <!--
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal"><i class="fa fa-reply"></i> Cancelar</button>
+              <button type="button" class="btn btn-primary" onclick="trasladarWlan()"><i class="fa fa-shipping-fast"></i> Trasladar</button>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+		
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script>
+	$(document).ready(function () {        
+		$('#editRadiusForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: 'fa fa-check',
+				invalid: 'fa fa-times',
+				validating: 'fas fa-spinner fa-pulse'
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchEditRadius').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchEditRadius').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#editRadius').modal('toggle');
+						$("form input[type=text]").each(function() { this.value = '' });
+						window.setTimeout(function() {
+							window.location = '';
+						}, 2000);
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchEditRadius').innerHTML = '<i class="fa fa-check"></i> Guardar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#editRadiusForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+					document.querySelector('#btnFetchEditRadius').innerHTML = '<i class="fa fa-check"></i> Guardar';
+					Swal.fire({
+						icon: 'error',
+						title: error,
+						showConfirmButton: false,
+						footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+					})
+				});
+			},
+			fields: {				
+				name: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},
+				description: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				},				
+				group: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+  </script>
+<script>
+	function delete_users_radius(id) {
+					Swal.fire({
+						"title": "¿Estas seguro?",
+						"text": "Esta acción es irreversible",
+						"icon": "warning",
+						"showCancelButton":true,
+						"cancelButtonText": "No, cancelar",
+						"confirmButtonText": "Si, eliminar",
+						"reverseButtons":true,
+						"confirmButtonColor": "darkred"
+					})
+					.then(function(result) {
+						if(result.isConfirmed){
+							var user = $('#user-' + id).data('user');
+							var dataString = "user=" + user;
+							$('#spinner').html(`
+							<div class="preloader">
+								<div class="loader">
+								<div class="spinner">
+									<div class="spinner-container">
+									<div class="spinner-rotator">
+										<div class="spinner-left">
+										<div class="spinner-circle"></div>
+										</div>
+										<div class="spinner-right">
+										<div class="spinner-circle"></div>
+										</div>
+									</div>
+									</div>
+								</div>
+								</div>
+							</div>
+							`);
+							$.ajax
+							({
+								type: "POST",
+								url: "{% url 'radius:delete_users_radius' %}",
+								data: dataString,
+								dataType: "json",
+								success: function(result)
+								{
+									if (result.status == true || result.status == 'true')
+									{
+										$('#spinner').empty()
+										window.location = "{% url 'radius:list_radius' %}";
+									}
+									if (result.status == false || result.status == 'false')
+									{
+										$('#spinner').empty()
+										Swal.fire({
+											icon: 'error',
+											title: result.msg,
+											showConfirmButton: false,
+											footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ result.msg +'">Envíanos un ticket y describe el problema</a>'
+										  })
+									}
+								},
+								error: function (jqXHR, status, error) {
+									$('#spinner').empty()
+									Swal.fire({
+										icon: 'error',
+										title: error,
+										showConfirmButton: false,
+										footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+									  })
+								}
+							});
+						}
+					})
+	}
+</script>
+<script>
+	$(document).ready(function () {        
+		$('#passwdChangeForm').bootstrapValidator({
+			message: 'Este valor no es valido',
+			feedbackIcons: {
+				valid: '',
+				invalid: '',
+				validating: ''
+			},
+			submitHandler: function (validator, form, submitButton) {
+				document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+				$.post(form.attr('action'), form.serialize(), function (result) {
+					if (result.status == false || result.status == 'false') {
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+						Toast.fire({
+							icon: 'error',
+							title: result.msg
+						});
+					} else if (result.status == true || result.status == 'true') {
+						$('#editPass').modal('toggle');
+						$("form input[type=password]").each(function() { this.value = '' });
+						var Toast = Swal.mixin({
+							toast: true,
+							orientation: 'auto',
+							showConfirmButton: false,
+							timer: 4000
+						});
+						document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+						Toast.fire({
+							icon: 'success',
+							title: result.msg
+						});
+  
+					} else {
+						$('#passwdChangeForm').bootstrapValidator('disableSubmitButtons', false);
+					}
+				}, 'json')
+				.done(function(msg){  })
+				.fail(function(xhr, status, error) {
+				  document.querySelector('#btnFetchPasswd').innerHTML = '<i class="fa fa-check"></i> Cambiar';
+				  Swal.fire({
+					icon: 'error',
+					title: error,
+					showConfirmButton: false,
+					footer: '<a href="mailto:reportes@cristal.hlg.sld.cu?Subject='+ error +'">Envíanos un ticket y describe el problema</a>'
+				  })
+				});
+			},
+			fields: {
+				passwd: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						identical: {
+							field: 'passwd1',
+							message: 'Las contraseñas no coenciden'
+						}
+					}
+				},
+				passwd1: {
+					validators: {
+						notEmpty: {
+							message: 'Este campo no puede estar vacio'
+						},
+						identical: {
+							field: 'passwd',
+							message: 'Las contraseñas no coenciden'
+						}
+					}
+				}
+			}
+		})
+			.on('success.field.fv', function (e, data) {
+				if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+					data.fv.disableSubmitButtons(true);
+				}
+			});
+	});
+  </script>
+  <script>
+	const togglePassword = document.querySelector("#togglePassword");
+	const togglePassword1 = document.querySelector("#togglePassword1");
+	const passwd = document.querySelector("#passwd");
+	const passwd1 = document.querySelector("#passwd1");
+	
+	togglePassword.addEventListener("click", function () {
+	   
+	  // toggle the type attribute
+	  const type = passwd.getAttribute("type") === "password" ? "text" : "password";
+	  passwd.setAttribute("type", type);
+	  // toggle the eye icon
+	  this.classList.toggle('fa-eye');
+	  this.classList.toggle('fa-eye-slash');
+	}); 
+	togglePassword1.addEventListener("click", function () {
+	   
+	  // toggle the type attribute
+	  const type = passwd1.getAttribute("type") === "password" ? "text" : "password";
+	  passwd1.setAttribute("type", type);
+	  // toggle the eye icon
+	  this.classList.toggle('fa-eye');
+	  this.classList.toggle('fa-eye-slash');
+	});
+	</script>
+{% endblock %}

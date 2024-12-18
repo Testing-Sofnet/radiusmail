@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+{% load static %}
+<div class="container-fluid">
+    <div class="page-header">
+		<div class="row">
+			<div class="col-md-12">
+				<h3><i class="fa fa-globe-americas me-2"></i> Listado de Permisos de Internet</h3>
+			</div>
+		</div>
+	</div>
+    <div id="internetlist"></div>
+</div>
+
+</main>
+{% endblock %}
+{% block extrajs %}
+<script src="/static/js/custom.js"></script>
+<script src="/static/react/babel.min.js"></script>
+<script src="/static/react/react.development.js"></script>
+<script src="/static/react/react-dom.development.js"></script>
+<script type="text/babel">
+    const Listusers = ({listusers = [], spinner, errormsg, count}) => {
+        const renderUsers = (
+            <>
+                {
+				<div className="table-responsive">
+                    <table id="listinternet" className="table table-sm table-hover table-striped display nowrap">
+                        <caption>{count} Permisos</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">#</th>
+							<th scope="col">Alias del enlace</th>
+                            <th scope="col">Institución</th>
+                            <th scope="col">Municipio</th>
+                            <th scope="col">Fecha de autorizo</th>
+                            <th scope="col">Vence</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Cuota</th>
+                            <th scope="col">IP</th>                            
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {listusers.map((item, index) => (
+                                <tr key={index}>
+									<td>{index + 1}</td>
+                                    <td><a href={"/adsl/edit/" + item.encodepk + "/"}>{item.adsl}</a></td>
+                                    <td>{item.trabajo.trabajo_name}</td>
+                                    <td>{item.municipio.municipio_name}</td>                                                                      
+                                    <td>{item.fecha_autorizo}</td>
+                                    <td>{item.vencimiento}</td>
+                                    <td>
+                                        {(() => {
+                                            if (item.alerta_vencimiento === "warning") {
+                                                return <span class="badge bg-warning text-dark">Próximo a vencer</span>;
+                                            } else if (item.alerta_vencimiento === "danger") {
+                                                return <span class="badge bg-danger">Vencido</span>;
+                                            }
+                                            return <span class="badge bg-success">Vigente</span>;
+                                        })()}
+                                    </td>
+									<td>{item.cuota}</td>
+									<td>{item.ip}</td>                                 
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+				</div>                
+                }
+            </>
+        )
+        return (
+            <>
+                {errormsg && <div className="alert alert-danger">{errormsg}</div>}
+                {spinner ? <Spinner /> : renderUsers}
+            </>
+        )
+    }
+</script>
+<script type="text/babel" src="/static/react/components/internetlist.js"></script>
+{% endblock %}

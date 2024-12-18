@@ -1,0 +1,243 @@
+﻿{% extends 'base.html' %}
+{% load systemtags %}
+{% block container %}
+{% load static %}
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+            <div class="pull-right mt-4">
+                <a href="#" class="btn btn-primary btn-sm" role="button" data-mdb-toggle="modal" data-mdb-target="#passwdModal"><i class="fa fa-key fa-fw"></i> Cambiar Contraseña</a>
+            </div>
+        </div>
+		<div class="col-md-6">
+            <h4 class="page-header">Datos Personales</h4>
+
+			<div class="row">
+				<div class="col-md-3">
+					
+					<img id="imgview" src="{% static 'img/Masculino.png' %}" width="108" height="128"/>
+				</div>
+				<div class="col-md-9">
+					<p><strong>Nombre:</strong> {{ user_datos.first_name }}</p>
+					<p><strong>Apellidos:</strong> {{ user_datos.last_name }}</p>
+					<p><strong>CI:</strong> {{ user_profile.ci }}</p>
+					<p><strong>Email:</strong> {{ user_datos.email }}</p>
+				</div>
+			</div>
+        </div>
+		<div class="col-md-6">
+            <h4 class="page-header">Perfil</h4>
+
+            <p><strong>Grupo:</strong> {{ user_datos.groups.all.0.name }}</p>
+			<!--<p><strong>Dominio:</strong> @infomed.sld.cu</p>-->
+            <p><strong>Municipio:</strong> {{ user_profile.municipio|default_if_none:"---" }}</p>
+			<p><strong>Tipo de institución:</strong> {{ user_profile.trabajo.tipo|default_if_none:"---" }}</p>
+			<p><strong>Institución:</strong> {{ user_profile.trabajo|default_if_none:"---" }}</p>
+            <p><strong>Dirección IP:</strong> {{ user_profile.ip_address }}</p>
+			<p><strong>Cuota:</strong> {{ user_profile.quota|default_if_none:"Sin Cuota" }}</p>
+            {% if user_profile.quota %}
+				{% if request.user|has_group:"Representantes" %}
+                <div class="progress" style="height: 20px">
+				  <div class="progress-bar progress-bar-striped progress-bar-animated {{ user_profile.quota|quota:total_users|quota_style }}"	role="progressbar"	style="width: {{ user_profile.quota|quota:total_users|floatformat:0}}%" aria-valuemin="0" aria-valuemax="100">
+					{{ user_profile.quota|quota:total_users|floatformat:0}}% Usado
+				  </div>
+				</div>
+				{% endif %}
+            {% endif %}			
+        </div>
+	</div>
+    <div class="row">
+        <div class="col-md-6">
+            <h4 id="adsl" class="page-header-system"> ADSL</h4>
+            <div class="list-group">
+                {% for adsl in adsl %}
+                 <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1"><strong>Alias:</strong> {{ adsl.alias }}</h5>
+                      <small>{{ adsl.ed }}</small>
+                    </div>
+                    
+                    <small><strong>IP WAN:</strong> {{ adsl.ipwan }} {{ adsl.ipwan_netmask }}</small> <br>
+                    <small><strong>IP LAN:</strong> {{ adsl.iplan|default_if_none:"NAT" }} {{ adsl.iplan_netmask|default_if_none:"" }}</small> <br>
+                    <small><strong>Ancho de Banda:</strong> {{ adsl.ab }} {{ adsl.um_ab }}</small> <br>
+                    <small>
+                        {% if adsl.InternetAdsl.ip %}
+                        <strong>Internet:</strong> {{adsl.InternetAdsl.ip }}
+                            {% if adsl.InternetAdsl.alerta_vencimiento == 'danger' %}
+                                <span class="badge bg-danger">Vencido</span>
+                            {% elif adsl.InternetAdsl.alerta_vencimiento == 'warning' %}
+                                <span class="badge bg-warning text-dark">Próximo a vencer</span>
+                            {% else %}
+                                <span class="badge bg-success">Vigente</span>
+                            {% endif %}
+                        {% endif %}
+                    </small>
+                    
+                  </a>
+                {% endfor %}
+            </div>
+            
+        </div>
+        <div class="col-md-6">
+            <h4 id="contratos" class="page-header-system">Contratos</h4>
+            
+            <p><strong>Contrato Principal:</strong> -</p>
+			<p><strong>Suplemento 1:</strong> -</p>
+			<p><strong>Suplemento 2:</strong> -</p>
+			<p><strong>Suplemento 3:</strong> -</p>
+			<p><strong>Suplemento 4:</strong> -</p>
+			<p><strong>Suplemento 5:</strong> -</p>
+            
+        </div>
+    </div>
+	
+	<!-- Modal -->
+<div class="modal fade right" id="passwdModal" tabindex="-1" aria-labelledby="passwd" aria-hidden="true">
+  <div class="modal-dialog modal-side modal-top-right" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cambiar contraseña</h5>
+        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		<form id="passwdProfileForm" action="{% url 'system:passwd' %}" method="POST" role="form">{% csrf_token %}
+            <div class="form-group">
+                <label for="model">Contraseña nueva</label>
+                <div class="input-group mb-3">
+                  <input type="password" class="form-control" id="passwd" name="passwd"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword" 
+                   style="cursor: pointer"></i>
+                   </span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="model">Repetir contraseña</label>
+                <div class="input-group mb-3">              
+                  <input type="password" class="form-control" id="passwd1" name="passwd1"/>
+                  <span class="input-group-text">
+                    <i class="fa fa-eye" id="togglePassword1" 
+                   style="cursor: pointer"></i>
+                   </span>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-mdb-dismiss="modal">Cancelar</button>
+              <button id="btnFetch" type="submit" class="btn btn-primary" disabled>Cambiar</button> 
+            </div>
+         </form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+		
+</div>
+</main>
+{% endblock %}
+{% block extrajs %}
+<script>
+  $(document).ready(function () {        
+      $('#passwdProfileForm').bootstrapValidator({
+          message: 'Este valor no es valido',
+          feedbackIcons: {
+              valid: '',
+              invalid: '',
+              validating: ''
+          },
+          submitHandler: function (validator, form, submitButton) {
+              document.querySelector('#btnFetch').innerHTML = '<i class="fas fa-spinner fa-pulse" style="padding: 0; margin-right: 10px;"></i> Cargando...';
+              $.post(form.attr('action'), form.serialize(), function (result) {
+                  if (result.status == false || result.status == 'false') {
+                      var Toast = Swal.mixin({
+                          toast: true,
+                          orientation: 'auto',
+                          showConfirmButton: false,
+                          timer: 4000
+                      });
+                      document.querySelector('#btnFetch').innerHTML = 'Cambiar';
+                      Toast.fire({
+                          icon: 'error',
+                          title: result.msg
+                      });
+                  } else if (result.status == true || result.status == 'true') {
+                      $('#passwdModal').modal('toggle');
+                      $("form input[type=password]").each(function() { this.value = '' });
+                      var Toast = Swal.mixin({
+                          toast: true,
+                          orientation: 'auto',
+                          showConfirmButton: false,
+                          timer: 4000
+                      });
+                      document.querySelector('#btnFetch').innerHTML = 'Cambiar';
+                      Toast.fire({
+                          icon: 'success',
+                          title: result.msg
+                      });
+
+                  } else {
+                      $('#passwdProfileForm').bootstrapValidator('disableSubmitButtons', false);
+                  }
+              }, 'json');
+          },
+          fields: {
+              passwd: {
+                  validators: {
+                      notEmpty: {
+                          message: 'Este campo no puede estar vacio'
+                      },
+                      identical: {
+                          field: 'passwd1',
+                          message: 'Las contraseñas no coenciden'
+                      }
+                  }
+              },
+              passwd1: {
+                  validators: {
+                      notEmpty: {
+                          message: 'Este campo no puede estar vacio'
+                      },
+                      identical: {
+                          field: 'passwd',
+                          message: 'Las contraseñas no coenciden'
+                      }
+                  }
+              }
+          }
+      })
+          .on('success.field.fv', function (e, data) {
+              if (data.fv.getInvalidFields().length > 0) {    // There is invalid field
+                  data.fv.disableSubmitButtons(true);
+              }
+          });
+  });
+</script>
+<script>
+const togglePassword = document.querySelector("#togglePassword");
+const togglePassword1 = document.querySelector("#togglePassword1");
+const passwd = document.querySelector("#passwd");
+const passwd1 = document.querySelector("#passwd1");
+
+togglePassword.addEventListener("click", function () {
+   
+  // toggle the type attribute
+  const type = passwd.getAttribute("type") === "password" ? "text" : "password";
+  passwd.setAttribute("type", type);
+  // toggle the eye icon
+  this.classList.toggle('fa-eye');
+  this.classList.toggle('fa-eye-slash');
+}); 
+togglePassword1.addEventListener("click", function () {
+   
+  // toggle the type attribute
+  const type = passwd1.getAttribute("type") === "password" ? "text" : "password";
+  passwd1.setAttribute("type", type);
+  // toggle the eye icon
+  this.classList.toggle('fa-eye');
+  this.classList.toggle('fa-eye-slash');
+});
+</script>
+{% endblock %}
